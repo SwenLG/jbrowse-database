@@ -1,0 +1,27 @@
+version: '3.8'
+services:
+  postgres:
+    image: postgres:latest
+    container_name: postgres_server
+    environment:
+      POSTGRES_USER: swen
+      POSTGRES_PASSWORD: cremers
+      POSTGRES_DB: jbrowse_config
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./init.sql:/docker-entrypoint-initdb.d/init.sql
+
+  pgadmin:
+    image: elestio/pgadmin
+    container_name: pgadmin_container
+    environment:
+      PGADMIN_DEFAULT_EMAIL: scremers@limgroup.eu
+      PGADMIN_DEFAULT_PASSWORD: Novobi14
+    ports:
+      - "5050:80"
+
+volumes:
+  postgres_data:
+
