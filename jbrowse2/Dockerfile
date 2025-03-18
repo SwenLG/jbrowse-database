@@ -12,6 +12,8 @@ RUN apt-get update && apt-get install -y curl unzip && \
     ls -lh && \
     rm jbrowse-web.zip
 
+COPY nginx.conf /etc/nginx/conf.d/default.conf
+
 # Expose the default web port
 EXPOSE 80
 
