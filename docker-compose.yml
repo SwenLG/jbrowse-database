@@ -1,4 +1,5 @@
 version: '3.8'
+
 services:
   postgres:
     image: postgres:latest
@@ -22,6 +23,28 @@ services:
     ports:
       - "5050:80"
 
+  jbrowse2:
+    build: ./jbrowse2  # This will use a Dockerfile inside a jbrowse2 directory
+    container_name: jbrowse2_server
+    ports:
+      - "8080:80"
+    volumes:
+      - ./jbrowse2_data:/usr/share/nginx/html  # Mount the JBrowse data
+      - ./config/config.json:/usr/share/nginx/html/config.json  # Mount your config.json inside the container
+    restart: unless-stopped  # Ensure it restarts if it crashes
+
+  flask_webform:
+    build: ./flask_webform
+    container_name: flask_webform_server
+    ports:
+      - "5000:5000"
+    volumes:
+      - ./flask_webform:/app
+    restart: unless-stopped
+
+
 volumes:
   postgres_data:
+  jbrowse2_data:  # New volume for JBrowse2 data
+
 

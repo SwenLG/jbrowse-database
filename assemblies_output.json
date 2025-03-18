@@ -1,0 +1,208 @@
+{
+    "assemblies": [
+        {
+            "name": "AsparagusCHR_V1.1",
+            "aliases": [
+                "Asparagus male v1.1"
+            ],
+            "sequence": {
+                "type": "ReferenceSequenceTrack",
+                "trackId": "AsparagusCHR_V1.1-ReferenceSequenceTrack",
+                "adapter": {
+                    "type": "IndexedFastaAdapter",
+                    "fastaLocation": {
+                        "locationType": "UriLocation",
+                        "uri": "data/lim-asp11-data/refseq/AsparagusCHR_V1.1.fa"
+                    },
+                    "faiLocation": {
+                        "locationType": "UriLocation",
+                        "uri": "data/lim-asp11-data/refseq/AsparagusCHR_V1.1.fa.fai"
+                    },
+                    "metadataLocation": {
+                        "locationType": "UriLocation",
+                        "uri": "/path/to/fa.metadata.yaml"
+                    }
+                }
+            },
+            "displays": [
+                {
+                    "type": "LinearReferenceSequenceDisplay",
+                    "displayId": "AsparagusCHR_V1.1-ReferenceSequenceTrack-LinearReferenceSequenceDisplay",
+                    "renderer": {
+                        "type": "DivSequenceRenderer",
+                        "height": 15
+                    }
+                },
+                {
+                    "type": "LinearGCContentDisplay",
+                    "displayId": "AsparagusCHR_V1.1-ReferenceSequenceTrack-LinearGCContentDisplay"
+                }
+            ],
+            "refNameAliases": {
+                "adapter": {
+                    "type": "FromConfigAdapter",
+                    "adapterId": "W6DyPGJ0UU",
+                    "features": [
+                        {
+                            "refName": "AsparagusV1_01",
+                            "uniqueId": "alias1",
+                            "aliases": [
+                                "1",
+                                "chr1"
+                            ]
+                        },
+                        {
+                            "refName": "AsparagusV1_02",
+                            "uniqueId": "alias2",
+                            "aliases": [
+                                "2",
+                                "chr2"
+                            ]
+                        }
+                    ]
+                }
+            },
+            "displayName": "Aspargus officinalis Male assembly v1.1"
+        },
+        {
+            "name": "fan_camarosa_v1.0.a1",
+            "aliases": [],
+            "sequence": {
+                "type": "ReferenceSequenceTrack",
+                "trackId": "fan_camarosa_v1.0.a1-1649075021930",
+                "adapter": {
+                    "type": "BgzipFastaAdapter",
+                    "fastaLocation": {
+                        "locationType": "UriLocation",
+                        "uri": "data/strawberry/fan_camarosa_v1/refseq/F_ana_Camarosa_6-28-17.fasta.gz"
+                    },
+                    "faiLocation": {
+                        "locationType": "UriLocation",
+                        "uri": "data/strawberry/fan_camarosa_v1/refseq/F_ana_Camarosa_6-28-17.fasta.gz.fai"
+                    },
+                    "metadataLocation": {
+                        "locationType": "UriLocation",
+                        "uri": "/path/to/fa.metadata.yaml"
+                    },
+                    "gziLocation": {
+                        "locationType": "UriLocation",
+                        "uri": "data/strawberry/fan_camarosa_v1/refseq/F_ana_Camarosa_6-28-17.fasta.gz.gzi"
+                    }
+                }
+            },
+            "displays": [
+                {
+                    "type": "LinearReferenceSequenceDisplay",
+                    "displayId": "fan_camarosa_v1.0.a1-1649075021930-LinearReferenceSequenceDisplay"
+                },
+                {
+                    "type": "LinearGCContentDisplay",
+                    "displayId": "fan_camarosa_v1.0.a1-1649075021930-LinearGCContentDisplay"
+                }
+            ],
+            "displayName": "Fragaria x ananassa Camarosa Genome Assembly v1.0"
+        },
+        {
+            "name": "Strawberry_NEBNext_targets",
+            "aliases": [],
+            "sequence": {
+                "type": "ReferenceSequenceTrack",
+                "trackId": "Strawberry_NEBNext_targets-1671537066002",
+                "adapter": {
+                    "type": "IndexedFastaAdapter",
+                    "fastaLocation": {
+                        "locationType": "UriLocation",
+                        "uri": "data/projects/p68_aardbei_merker_platform/05_analyse_seq_data/03_mapping_to_target_ref/NEBNext_target_flanks.fasta"
+                    },
+                    "faiLocation": {
+                        "locationType": "UriLocation",
+                        "uri": "data/projects/p68_aardbei_merker_platform/05_analyse_seq_data/03_mapping_to_target_ref/NEBNext_target_flanks.fasta.fai"
+                    },
+                    "metadataLocation": {
+                        "locationType": "UriLocation",
+                        "uri": "/path/to/fa.metadata.yaml"
+                    }
+                }
+            },
+            "displays": [
+                {
+                    "type": "LinearGCContentDisplay",
+                    "displayId": "Strawberry_NEBNext_targets-1671537066002-LinearGCContentDisplay"
+                },
+                {
+                    "type": "LinearReferenceSequenceDisplay",
+                    "displayId": "Strawberry_NEBNext_targets-1671537066002-LinearReferenceSequenceDisplay"
+                }
+            ],
+            "displayName": "Strawberry NEBNext extended (+250bp) target sequences version [1AKP]"
+        },
+        {
+            "name": "Asparagus_V2_EVY",
+            "aliases": [],
+            "sequence": {
+                "type": "ReferenceSequenceTrack",
+                "trackId": "Asparagus_V2_EVY-1705415138152",
+                "adapter": {
+                    "type": "IndexedFastaAdapter",
+                    "fastaLocation": {
+                        "locationType": "UriLocation",
+                        "uri": "data/projects/2023/2023-asp-pan-genome-evy/results/genome/Asparagus_V2_EVY.fasta"
+                    },
+                    "faiLocation": {
+                        "locationType": "UriLocation",
+                        "uri": "data/projects/2023/2023-asp-pan-genome-evy/results/genome/Asparagus_V2_EVY.fasta.fai"
+                    },
+                    "metadataLocation": {
+                        "locationType": "UriLocation",
+                        "uri": "/path/to/fa.metadata.yaml"
+                    }
+                }
+            },
+            "displays": [
+                {
+                    "type": "LinearGCContentDisplay",
+                    "displayId": "Asparagus_V2_EVY-1705415138152-LinearGCContentDisplay"
+                },
+                {
+                    "type": "LinearReferenceSequenceDisplay",
+                    "displayId": "Asparagus_V2_EVY-1705415138152-LinearReferenceSequenceDisplay"
+                }
+            ],
+            "displayName": "Asparagus genome V2 Evy"
+        },
+        {
+            "name": "dh_limalexia",
+            "aliases": [],
+            "sequence": {
+                "type": "ReferenceSequenceTrack",
+                "trackId": "dh_limalexia-1737034294645",
+                "adapter": {
+                    "type": "IndexedFastaAdapter",
+                    "fastaLocation": {
+                        "locationType": "UriLocation",
+                        "uri": "data/projects/2024/phase-genomics/Strawberry_DHLI_assembly/LimalexiaDh_assembly/LimalexiaDhPlusOrganel.fa"
+                    },
+                    "faiLocation": {
+                        "locationType": "UriLocation",
+                        "uri": "data/projects/2024/phase-genomics/Strawberry_DHLI_assembly/LimalexiaDh_assembly/LimalexiaDhPlusOrganel.fa.fai"
+                    },
+                    "metadataLocation": {
+                        "locationType": "UriLocation",
+                        "uri": "/path/to/fa.metadata.yaml"
+                    }
+                }
+            },
+            "displays": [
+                {
+                    "type": "LinearReferenceSequenceDisplay",
+                    "displayId": "dh_limalexia-1737034294645-LinearReferenceSequenceDisplay"
+                },
+                {
+                    "type": "LinearGCContentDisplay",
+                    "displayId": "dh_limalexia-1737034294645-LinearGCContentDisplay"
+                }
+            ],
+            "displayName": "DH - Donor Limalexia (V1)"
+        }
+    ]
+}

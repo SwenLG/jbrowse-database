@@ -1,0 +1,252 @@
+{
+  "configuration": {
+    "rpc": {
+      "defaultDriver": "WebWorkerRpcDriver",
+      "drivers": {
+        "MainThreadRpcDriver": {},
+        "WebWorkerRpcDriver": {}
+      }
+    },
+    "disableAnalytics": true,
+    "extraThemes": {
+      "myTheme": {
+        "name": "Limgroup",
+        "mode": "light",
+        "palette": {
+          "primary": {
+            "main": "#193a42"
+          },
+          "secondary": {
+            "main": "#000"
+          },
+          "tertiary": {
+            "main": "#4a4a49"
+          },
+          "quaternary": {
+            "main": "#4499ad"
+          }
+        }
+      }
+    },
+    "logoPath": {
+      "locationType": "UriLocation",
+      "uri": ""
+    }
+  },
+  "plugins": [
+    {
+      "name": "GWAS",
+      "url": "https://unpkg.com/jbrowse-plugin-gwas/dist/jbrowse-plugin-gwas.umd.production.min.js"
+    }
+  ],
+  "assemblies": [],
+  "tracks": [],
+  "internetAccounts": [],
+  "aggregateTextSearchAdapters": [
+    {
+      "type": "TrixTextSearchAdapter",
+      "textSearchAdapterId": "AsparagusCHR_V1.1-index",
+      "ixFilePath": {
+        "locationType": "UriLocation",
+        "uri": "trix/AsparagusCHR_V1.1.ix"
+      },
+      "ixxFilePath": {
+        "locationType": "UriLocation",
+        "uri": "trix/AsparagusCHR_V1.1.ixx"
+      },
+      "metaFilePath": {
+        "locationType": "UriLocation",
+        "uri": "trix/AsparagusCHR_V1.1_meta.json"
+      },
+      "assemblyNames": [
+        "AsparagusCHR_V1.1"
+      ]
+    }
+  ],
+  "connections": [
+    {
+      "type": "UCSCTrackHubConnection",
+      "connectionId": "TrackHubConnection-AsparagusCHR_V1.1",
+      "name": "TrackHubConnection-AsparagusCHR_V1.1",
+      "assemblyNames": [
+        "AsparagusCHR_V1.1"
+      ],
+      "hubTxtLocation": {
+        "locationType": "UriLocation",
+        "uri": "http://10.0.0.21/jbrowse/data/myHub/hub.txt"
+      }
+    }
+  ],
+  "defaultSession": {
+    "id": "jwV27Zk_5",
+    "name": "New session 22-10-2021 10:57:53 22-10-2021 13:35:46",
+    "margin": 0,
+    "drawerWidth": 384,
+    "views": [
+      {
+        "id": "8xSK_V-WF",
+        "type": "LinearGenomeView",
+        "offsetPx": 50390998,
+        "bpPerPx": 0.5632364743053021,
+        "displayedRegions": [
+          {
+            "refName": "AsparagusV1_04",
+            "start": 0,
+            "end": 146560859,
+            "reversed": false,
+            "assemblyName": "AsparagusCHR_V1.1"
+          }
+        ],
+        "tracks": [
+          {
+            "id": "dDBp9H3JXp",
+            "type": "ReferenceSequenceTrack",
+            "configuration": "AsparagusCHR_V1.1-ReferenceSequenceTrack",
+            "displays": [
+              {
+                "id": "KucAaY-MLe",
+                "type": "LinearReferenceSequenceDisplay",
+                "height": 180,
+                "configuration": "AsparagusCHR_V1.1-ReferenceSequenceTrack-LinearReferenceSequenceDisplay",
+                "showForward": true,
+                "showReverse": true,
+                "showTranslation": true
+              }
+            ]
+          },
+          {
+            "id": "ZhERq6P9o",
+            "type": "FeatureTrack",
+            "configuration": "gene_annotations-1634910154028",
+            "displays": [
+              {
+                "id": "VzxuIgY9_q",
+                "type": "LinearBasicDisplay",
+                "height": 100,
+                "userBpPerPxLimit": 26186.381639581217,
+                "configuration": "gene_annotations-1634910154028-LinearBasicDisplay"
+              }
+            ]
+          },
+          {
+            "id": "kZYw83Xsz",
+            "type": "FeatureTrack",
+            "configuration": "nebnext_targets_v1.2_(1akd)",
+            "displays": [
+              {
+                "id": "uzb0VYOik2",
+                "type": "LinearBasicDisplay",
+                "height": 100,
+                "configuration": "nebnext_targets_v1.2_(1akd)-LinearBasicDisplay"
+              }
+            ]
+          },
+          {
+            "id": "znEkpgjISm",
+            "type": "FeatureTrack",
+            "configuration": "nimblegen_asp_v0.23_(28_november_2018)",
+            "displays": [
+              {
+                "id": "_JurMfYSt9",
+                "type": "LinearBasicDisplay",
+                "height": 100,
+                "configuration": "nimblegen_asp_v0.23_(28_november_2018)-LinearBasicDisplay"
+              }
+            ]
+          }
+        ],
+        "hideHeader": false,
+        "hideHeaderOverview": false,
+        "trackSelectorType": "hierarchical",
+        "trackLabels": "overlapping",
+        "showCenterLine": false
+      }
+    ],
+    "widgets": {
+      "hierarchicalTrackSelector": {
+        "id": "hierarchicalTrackSelector",
+        "type": "HierarchicalTrackSelectorWidget",
+        "collapsed": {
+          "nebnext_targets_v1.2_(1akd)": true,
+          "gene_annotations-1634910154028": true
+        },
+        "filterText": "",
+        "view": "8xSK_V-WF"
+      },
+      "baseFeature": {
+        "id": "baseFeature",
+        "type": "BaseFeatureWidget",
+        "featureData": {
+          "source": "EVM",
+          "type": "gene",
+          "start": 28382300,
+          "end": 28382819,
+          "strand": -1,
+          "phase": 0,
+          "refName": "AsparagusV1_04",
+          "db_phytocluster": "65064186",
+          "desc_refseq": "PREDICTED: dirigent protein 21-like [Elaeis guineensis]",
+          "db_araport": "AT1G65870.1",
+          "db_refseq": "XP_010911301.1",
+          "desc_araport": "Disease resistance-responsive (dirigent-like protein) family protein",
+          "id": "gene11659",
+          "desc_phytocluster": "(E=3e-71; M=41) PTHR21495 - NUCLEOPORIN-RELATED",
+          "species": "African oil palm",
+          "name": "AspV1_04.1096",
+          "subfeatures": [
+            {
+              "strand": -1,
+              "source": "EVM",
+              "type": "mRNA",
+              "start": 28382300,
+              "end": 28382819,
+              "phase": 0,
+              "refName": "AsparagusV1_04",
+              "id": "mRNA11659",
+              "parent": "gene11659",
+              "name": "AspV1_04.1096",
+              "subfeatures": [
+                {
+                  "strand": -1,
+                  "source": "EVM",
+                  "type": "CDS",
+                  "start": 28382300,
+                  "end": 28382819,
+                  "phase": 0,
+                  "refName": "AsparagusV1_04",
+                  "parent": "mRNA11659",
+                  "uniqueId": "8054534-offset-412991260-0-0",
+                  "parentId": "8054534-offset-412991260-0"
+                }
+              ],
+              "uniqueId": "8054534-offset-412991260-0",
+              "parentId": "8054534-offset-412991260"
+            }
+          ],
+          "uniqueId": "8054534-offset-412991260"
+        },
+        "view": "8xSK_V-WF"
+      },
+      "addTrackWidget": {
+        "id": "addTrackWidget",
+        "type": "AddTrackWidget",
+        "view": "8xSK_V-WF"
+      },
+      "configEditor": {
+        "id": "configEditor",
+        "type": "ConfigurationEditorWidget",
+        "target": "gene_annotations-1634910154028"
+      }
+    },
+    "activeWidgets": {
+      "hierarchicalTrackSelector": "hierarchicalTrackSelector"
+    },
+    "connectionInstances": [],
+    "sessionTracks": [],
+    "sessionConnections": [],
+    "sessionAssemblies": [],
+    "sessionPlugins": [],
+    "minimized": false,
+    "drawerPosition": "right"
+  }
+}
