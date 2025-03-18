@@ -17,70 +17,145 @@
         .input-group {
             margin-bottom: 15px;
         }
+        .file-type-display {
+            font-style: italic;
+            color: gray;
+            margin-top: 5px;
+        }
+        .disabled {
+            opacity: 0.5;
+            pointer-events: none;
+        }
     </style>
     <script>
         function detectFileType() {
+            if (!document.getElementById("auto_detect").checked) return;
+            
             const filePath = document.getElementById("file_location").value;
-            const autoDetectRadio = document.getElementById("auto_detect");
-            const manualSelect = document.getElementById("manual_select");
+            const fileTypeDisplay = document.getElementById("file_type_display");
 
-            if (autoDetectRadio.checked) {
-                const fileExtension = filePath.split('.').pop().toLowerCase();
-                const fileTypeMap = {
-                    "fa": "Fasta",
-                    "fasta": "Fasta",
-                    "vcf": "VCF",
-                    "vcf.gz": "VCF",
-                    "bam": "BAM",
-                    "cram": "CRAM",
-                    "gff": "GFF",
-                    "gff3": "GFF",
-                    "bed": "BED",
-                    "paf": "PAF",
-                    "delta": "Delta"
-                };
-
-                const detectedType = fileTypeMap[fileExtension] || "Unknown";
-                manualSelect.value = detectedType;
+            const fileParts = filePath.toLowerCase().split('.');
+            let fileExtension = fileParts.pop();
+            if (fileExtension === "gz" && fileParts.length > 0) {
+                fileExtension = fileParts.pop();
             }
+
+            const fileTypeMap = {
+                "fa": "Fasta",
+                "fasta": "Fasta",
+                "vcf": "VCF",
+                "bam": "BAM",
+                "cram": "CRAM",
+                "gff": "GFF",
+                "gff3": "GFF",
+                "bed": "BED",
+                "paf": "PAF",
+                "delta": "Delta"
+            };
+
+            const detectedType = fileTypeMap[fileExtension] || "";
+            fileTypeDisplay.textContent = detectedType ? `Detected: ${detectedType}` : "Detecting...";
+            updateDynamicFields(detectedType);
         }
 
-        function toggleManualSelection() {
-            document.getElementById("manual_select").disabled = !document.getElementById("manual_radio").checked;
+        function toggleFileTypeMode() {
+            const autoDetect = document.getElementById("auto_detect").checked;
+            const fileTypeDisplay = document.getElementById("file_type_display");
+            const manualSelect = document.getElementById("manual_select");
+
+            if (autoDetect) {
+                fileTypeDisplay.classList.remove("disabled");
+                fileTypeDisplay.textContent = "Detecting...";
+                manualSelect.disabled = true;
+                manualSelect.classList.add("disabled");
+                manualSelect.value = "";
+            } else {
+                fileTypeDisplay.classList.add("disabled");
+                fileTypeDisplay.textContent = "";
+                manualSelect.disabled = false;
+                manualSelect.classList.remove("disabled");
+            }
+            updateDynamicFields(manualSelect.value);
+        }
+
+        function updateDynamicFields(fileType) {
+            const dynamicFields = document.getElementById("dynamic_fields");
+            dynamicFields.innerHTML = ""; 
+
+            if (!fileType) return; 
+
+            let fields = [];
+            if (fileType === "Fasta") {
+                fields = [
+                    { label: "Assembly Name", id: "name" },
+                    { label: "Aliases (comma-separated)", id: "aliases" },
+                    { label: "Sequence Type", id: "sequence_type" },
+                    { label: "Sequence Track ID", id: "sequence_trackId" },
+                    { label: "Display Name", id: "displayName" },
+                    { label: "Adapter Type", id: "adapterType" },
+                    { label: "FASTA File Location", id: "fastaLocation" },
+                    { label: "FAI Index Location", id: "faiLocation" },
+                    { label: "Metadata Location", id: "metadataLocation" }
+                ];
+            } else if (["VCF", "GFF", "BAM", "CRAM", "BED", "PAF", "Delta"].includes(fileType)) {
+                fields = [
+                    { label: "Track ID", id: "trackId" },
+                    { label: "Type", id: "type" },
+                    { label: "Name", id: "name" },
+                    { label: "Assembly Names (comma-separated)", id: "assemblyNames" },
+                    { label: "Category", id: "category" },
+                    { label: "Adapter Type", id: "adapterType" }
+                ];
+
+                if (fileType === "VCF" || fileType === "GFF" || fileType === "BED") {
+                    fields.push({ label: "Index Location", id: "indexLocation" });
+                }
+                if (fileType === "BAM") {
+                    fields.push({ label: "BAM Location", id: "bamLocation" });
+                }
+                if (fileType === "CRAM") {
+                    fields.push({ label: "CRAM Location", id: "cramLocation" });
+                    fields.push({ label: "CRAI Location", id: "craiLocation" });
+                }
+                if (fileType === "PAF" || fileType === "Delta") {
+                    fields.push({ label: "File Location", id: "pafLocation" });
+                }
+            }
+
+            fields.forEach(field => {
+                const inputDiv = document.createElement("div");
+                inputDiv.className = "input-group";
+                inputDiv.innerHTML = `<label for="${field.id}">${field.label}:</label><br><input type="text" id="${field.id}" name="${field.id}" required>`;
+                dynamicFields.appendChild(inputDiv);
+            });
         }
     </script>
 </head>
 <body>
     <h1>JBrowse Data Submission</h1>
-    <form>
-        <!-- Assembly or Track Selection -->
-        <div class="input-group">
-            <label>Select Data Type:</label><br>
-            <input type="radio" id="assembly" name="data_type" value="assembly" required>
-            <label for="assembly">Assembly</label>
-            <input type="radio" id="track" name="data_type" value="track">
-            <label for="track">Track</label>
-        </div>
-
-        <!-- File Location Input -->
+    <form onsubmit="event.preventDefault(); updateDynamicFields(document.getElementById('manual_select').value || document.getElementById('file_type_display').textContent.replace('Detected: ', ''));">
         <div class="input-group">
             <label for="file_location">File Location:</label><br>
             <input type="text" id="file_location" name="file_location" oninput="detectFileType()" required>
         </div>
 
-        <!-- Auto-detect vs Manual Selection -->
         <div class="input-group">
-            <label>File Type Detection:</label><br>
-            <input type="radio" id="auto_detect" name="file_type_mode" value="auto" checked onclick="toggleManualSelection()">
-            <label for="auto_detect">Auto Detect</label>
-            <input type="radio" id="manual_radio" name="file_type_mode" value="manual" onclick="toggleManualSelection()">
+            <label>File Type Selection:</label><br>
+            <input type="radio" id="auto_detect" name="file_type_mode" value="auto" checked onclick="toggleFileTypeMode()">
+            <label for="auto_detect">Detect File</label>
+            <input type="radio" id="manual_radio" name="file_type_mode" value="manual" onclick="toggleFileTypeMode()">
             <label for="manual_radio">Manual</label>
         </div>
 
-        <!-- Manual File Type Selection -->
         <div class="input-group">
-            <label for="manual_select">File Type:</label><br>
-            <select id="manual_select" name="file_type" disabled>
+            <label>Detected File Type:</label><br>
+            <div id="file_type_display" class="file-type-display">Detecting...</div>
+        </div>
+
+        <div class="input-group">
+            <label for="manual_select">Override File Type:</label><br>
+            <select id="manual_select" name="file_type" disabled class="disabled" onchange="updateDynamicFields(this.value)">
+                <option value="" selected hidden>Select a file type</option>
                 <option value="Fasta">Fasta</option>
                 <option value="VCF">VCF</option>
                 <option value="BAM">BAM</option>
@@ -92,8 +167,9 @@
             </select>
         </div>
 
+        <div id="dynamic_fields"></div>
+
         <button type="submit">Submit</button>
     </form>
 </body>
 </html>
-
