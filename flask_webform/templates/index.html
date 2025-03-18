@@ -3,18 +3,97 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>JBrowse Track Form</title>
+    <title>JBrowse Data Submission</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 600px;
+            margin: auto;
+            padding: 20px;
+        }
+        label {
+            font-weight: bold;
+        }
+        .input-group {
+            margin-bottom: 15px;
+        }
+    </style>
+    <script>
+        function detectFileType() {
+            const filePath = document.getElementById("file_location").value;
+            const autoDetectRadio = document.getElementById("auto_detect");
+            const manualSelect = document.getElementById("manual_select");
+
+            if (autoDetectRadio.checked) {
+                const fileExtension = filePath.split('.').pop().toLowerCase();
+                const fileTypeMap = {
+                    "fa": "Fasta",
+                    "fasta": "Fasta",
+                    "vcf": "VCF",
+                    "vcf.gz": "VCF",
+                    "bam": "BAM",
+                    "cram": "CRAM",
+                    "gff": "GFF",
+                    "gff3": "GFF",
+                    "bed": "BED",
+                    "paf": "PAF",
+                    "delta": "Delta"
+                };
+
+                const detectedType = fileTypeMap[fileExtension] || "Unknown";
+                manualSelect.value = detectedType;
+            }
+        }
+
+        function toggleManualSelection() {
+            document.getElementById("manual_select").disabled = !document.getElementById("manual_radio").checked;
+        }
+    </script>
 </head>
 <body>
-    <h1>Submit New Track</h1>
+    <h1>JBrowse Data Submission</h1>
     <form>
-        <label for="track_name">Track Name:</label>
-        <input type="text" id="track_name" name="track_name" required>
-        <br>
-        <label for="file_location">File Location:</label>
-        <input type="text" id="file_location" name="file_location" required>
-        <br>
+        <!-- Assembly or Track Selection -->
+        <div class="input-group">
+            <label>Select Data Type:</label><br>
+            <input type="radio" id="assembly" name="data_type" value="assembly" required>
+            <label for="assembly">Assembly</label>
+            <input type="radio" id="track" name="data_type" value="track">
+            <label for="track">Track</label>
+        </div>
+
+        <!-- File Location Input -->
+        <div class="input-group">
+            <label for="file_location">File Location:</label><br>
+            <input type="text" id="file_location" name="file_location" oninput="detectFileType()" required>
+        </div>
+
+        <!-- Auto-detect vs Manual Selection -->
+        <div class="input-group">
+            <label>File Type Detection:</label><br>
+            <input type="radio" id="auto_detect" name="file_type_mode" value="auto" checked onclick="toggleManualSelection()">
+            <label for="auto_detect">Auto Detect</label>
+            <input type="radio" id="manual_radio" name="file_type_mode" value="manual" onclick="toggleManualSelection()">
+            <label for="manual_radio">Manual</label>
+        </div>
+
+        <!-- Manual File Type Selection -->
+        <div class="input-group">
+            <label for="manual_select">File Type:</label><br>
+            <select id="manual_select" name="file_type" disabled>
+                <option value="Fasta">Fasta</option>
+                <option value="VCF">VCF</option>
+                <option value="BAM">BAM</option>
+                <option value="CRAM">CRAM</option>
+                <option value="GFF">GFF</option>
+                <option value="BED">BED</option>
+                <option value="PAF">PAF</option>
+                <option value="Delta">Delta</option>
+            </select>
+        </div>
+
         <button type="submit">Submit</button>
     </form>
 </body>
 </html>
+
