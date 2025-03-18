@@ -31,7 +31,8 @@ services:
     volumes:
       - ./jbrowse2_data:/usr/share/nginx/html  # Mount the JBrowse data
       - ./config/config.json:/usr/share/nginx/html/config.json  # Mount your config.json inside the container
-      - /mnt/data:/usr/share/nginx/html/data:ro  # ✅ Mount all genomic data
+      - /mnt/data:/usr/share/nginx/html/mnt/data:ro  # ✅ Make /mnt/data available inside the container
+      - /mnt/data:/usr/share/nginx/html/jbrowse/data:ro  # ✅ Also mount /mnt/data as /jbrowse/data
     restart: unless-stopped  # Ensure it restarts if it crashes
 
   flask_webform:
