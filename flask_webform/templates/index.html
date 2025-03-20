@@ -28,11 +28,56 @@
         }
     </style>
     <script>
-        function detectFileType() {
+
+        let fieldDefinitions = {};  // Global object to store the JSON data
+        let fieldDefinitionsLoaded = false;  // Track if field definitions are loaded
+    
+        // 🔹 Load the JSON file BEFORE using it
+        async function loadFieldDefinitions() {
+            try {
+                const response = await fetch('/dynamic_fields.json');  // ✅ Fetch JSON
+                fieldDefinitions = await response.json();
+                fieldDefinitionsLoaded = true; // ✅ Mark as loaded
+                console.log("✅ Field definitions loaded:", fieldDefinitions);
+            } catch (error) {
+                console.error("❌ Error loading field definitions:", error);
+            }
+        }
+    
+        const assemblyFileTypes = {
+            "fa": "Fasta",
+            "fasta": "Fasta"
+        };
+    
+        const trackFileTypes = {
+            "vcf": "VCF",
+            "bam": "BAM",
+            "cram": "CRAM",
+            "gff": "GFF",
+            "gff3": "GFF",
+            "bed": "BED",
+            "paf": "PAF",
+            "delta": "DELTA"
+        };
+    
+        async function detectFileType() {
+            if (!fieldDefinitionsLoaded) {
+                console.warn("⚠️ Field definitions not loaded yet. Waiting...");
+                return;
+            }
+
             if (!document.getElementById("auto_detect").checked) return;
-            
-            const filePath = document.getElementById("file_location").value;
+
+            const filePath = document.getElementById("file_location").value.trim();
             const fileTypeDisplay = document.getElementById("file_type_display");
+            const dynamicFields = document.getElementById("dynamic_fields");
+
+            // 🔹 If the file path is empty, clear the fields and return
+            if (!filePath) {
+                fileTypeDisplay.textContent = "Detecting...";
+                dynamicFields.innerHTML = "";  // ✅ Clear fields when input is empty
+                return;
+            }
 
             const fileParts = filePath.toLowerCase().split('.');
             let fileExtension = fileParts.pop();
@@ -40,96 +85,316 @@
                 fileExtension = fileParts.pop();
             }
 
-            const fileTypeMap = {
-                "fa": "Fasta",
-                "fasta": "Fasta",
-                "vcf": "VCF",
-                "bam": "BAM",
-                "cram": "CRAM",
-                "gff": "GFF",
-                "gff3": "GFF",
-                "bed": "BED",
-                "paf": "PAF",
-                "delta": "Delta"
-            };
+            let isAssembly = document.getElementById("assembly").checked;
+            const fileTypeMap = isAssembly ? assemblyFileTypes : trackFileTypes;
+
+            if (!fileTypeMap) {
+                console.error("❌ Field definitions not found for this category.");
+                dynamicFields.innerHTML = "";  // ✅ Ensure fields are cleared on error
+                return;
+            }
 
             const detectedType = fileTypeMap[fileExtension] || "";
-            fileTypeDisplay.textContent = detectedType ? `Detected: ${detectedType}` : "Detecting...";
-            updateDynamicFields(detectedType);
+
+            if (detectedType) {
+                fileTypeDisplay.textContent = `Detected: ${detectedType}`;
+                updateDynamicFields(detectedType);
+            } else {
+                fileTypeDisplay.textContent = "Detecting...";
+                dynamicFields.innerHTML = "";  // ✅ Clear fields when the file type is invalid
+            }
         }
 
+    
+        // 🔹 Load JSON before allowing detection
+        window.onload = async () => {
+            await loadFieldDefinitions();  // ✅ Ensure JSON is available before functions run
+        };
+    
         function toggleFileTypeMode() {
+            if (!fieldDefinitionsLoaded) {
+                console.warn("⚠️ Field definitions not loaded yet.");
+                return;
+            }
+    
             const autoDetect = document.getElementById("auto_detect").checked;
             const fileTypeDisplay = document.getElementById("file_type_display");
             const manualSelect = document.getElementById("manual_select");
-
+    
             if (autoDetect) {
                 fileTypeDisplay.classList.remove("disabled");
-                fileTypeDisplay.textContent = "Detecting...";
                 manualSelect.disabled = true;
                 manualSelect.classList.add("disabled");
-                manualSelect.value = "";
+                detectFileType();  // 🔹 Re-detect from the file location box
             } else {
                 fileTypeDisplay.classList.add("disabled");
-                fileTypeDisplay.textContent = "";
                 manualSelect.disabled = false;
                 manualSelect.classList.remove("disabled");
+                updateDynamicFields(manualSelect.value);  // 🔹 Use the dropdown selection
             }
-            updateDynamicFields(manualSelect.value);
         }
-
+        
         function updateDynamicFields(fileType) {
-            const dynamicFields = document.getElementById("dynamic_fields");
-            dynamicFields.innerHTML = ""; 
-
-            if (!fileType) return; 
-
-            let fields = [];
-            if (fileType === "Fasta") {
-                fields = [
-                    { label: "Assembly Name", id: "name" },
-                    { label: "Aliases (comma-separated)", id: "aliases" },
-                    { label: "Sequence Type", id: "sequence_type" },
-                    { label: "Sequence Track ID", id: "sequence_trackId" },
-                    { label: "Display Name", id: "displayName" },
-                    { label: "Adapter Type", id: "adapterType" },
-                    { label: "FASTA File Location", id: "fastaLocation" },
-                    { label: "FAI Index Location", id: "faiLocation" },
-                    { label: "Metadata Location", id: "metadataLocation" }
-                ];
-            } else if (["VCF", "GFF", "BAM", "CRAM", "BED", "PAF", "Delta"].includes(fileType)) {
-                fields = [
-                    { label: "Track ID", id: "trackId" },
-                    { label: "Type", id: "type" },
-                    { label: "Name", id: "name" },
-                    { label: "Assembly Names (comma-separated)", id: "assemblyNames" },
-                    { label: "Category", id: "category" },
-                    { label: "Adapter Type", id: "adapterType" }
-                ];
-
-                if (fileType === "VCF" || fileType === "GFF" || fileType === "BED") {
-                    fields.push({ label: "Index Location", id: "indexLocation" });
-                }
-                if (fileType === "BAM") {
-                    fields.push({ label: "BAM Location", id: "bamLocation" });
-                }
-                if (fileType === "CRAM") {
-                    fields.push({ label: "CRAM Location", id: "cramLocation" });
-                    fields.push({ label: "CRAI Location", id: "craiLocation" });
-                }
-                if (fileType === "PAF" || fileType === "Delta") {
-                    fields.push({ label: "File Location", id: "pafLocation" });
-                }
+            if (!fieldDefinitionsLoaded) {
+                console.warn("⚠️ Field definitions not loaded yet.");
+                return;
             }
 
-            fields.forEach(field => {
-                const inputDiv = document.createElement("div");
-                inputDiv.className = "input-group";
-                inputDiv.innerHTML = `<label for="${field.id}">${field.label}:</label><br><input type="text" id="${field.id}" name="${field.id}" required>`;
-                dynamicFields.appendChild(inputDiv);
+            const dynamicFields = document.getElementById("dynamic_fields");
+            const isAssembly = document.getElementById("assembly").checked;
+            const isBgzip = document.getElementById("bgzip").checked;
+            const fileLocation = document.getElementById("file_location").value.trim();
+
+            dynamicFields.innerHTML = "";
+
+            // 🔹 Helper function to extract filename without extension
+            function getFileNameWithoutExtension(filePath) {
+                const fileName = filePath.split('/').pop(); // Get last part after "/"
+                return fileName.replace(/\.[^.]+(\.gz)?$/, ""); // Remove extension(s)
+            }
+
+            // 🔹 Determine the correct file type for FASTA, but only if the file is valid
+            if (isAssembly) {
+                const validFastaRegex = /\.(fa|fasta)(\.gz)?$/i;  // ✅ Matches .fa, .fasta, .fa.gz, .fasta.gz
+
+                if (!validFastaRegex.test(fileLocation)) {
+                    console.warn("⚠️ No valid FASTA file detected in the location box.");
+                    return;
+                }
+
+                fileType = isBgzip ? "BgzipFasta" : "IndexedFasta";
+            }
+
+            if (!fileType || !fieldDefinitions[fileType]) {
+                console.warn(`⚠️ No field definitions found for fileType: ${fileType}`);
+                return;
+            }
+
+            let fields = [...fieldDefinitions[fileType].fields];
+
+            fields.forEach(async field => {
+                let value = "";
+
+                if (field.id === "assemblyNames") {
+                    // ✅ Create dropdown for Assembly Names
+                    const selectDiv = document.createElement("div");
+                    selectDiv.className = "input-group";
+                    selectDiv.innerHTML = `<label for="assemblyNames">${field.label}:</label><br>
+                                        <select id="assemblyNames" name="assemblyNames">
+                                            <option value="" selected hidden>Loading assemblies...</option>
+                                        </select>`;
+                    dynamicFields.appendChild(selectDiv);
+
+                    // ✅ Fetch and populate assemblies
+                    try {
+                        const response = await fetch('/get_assemblies');
+                        const assemblies = await response.json();
+
+                        if (assemblies.error) {
+                            console.error("❌ Error fetching assemblies:", assemblies.error);
+                            return;
+                        }
+
+                        const dropdown = document.getElementById("assemblyNames");
+                        dropdown.innerHTML = '<option value="" selected hidden>Select an assembly</option>'; // ✅ Reset options
+
+                        assemblies.forEach(assembly => {
+                            const option = document.createElement("option");
+                            option.value = assembly;
+                            option.textContent = assembly;
+                            dropdown.appendChild(option);
+                        });
+
+                        console.log("✅ Assemblies loaded:", assemblies);
+                    } catch (error) {
+                        console.error("❌ Error fetching assemblies:", error);
+                    }
+                } 
+                else if (field.id === "category") {
+                    const categoryDiv = document.createElement("div");
+                    categoryDiv.className = "input-group";
+                    categoryDiv.innerHTML = `<label>${field.label}:</label><br>`;
+                    dynamicFields.appendChild(categoryDiv);
+
+                    try {
+                        const response = await fetch('/get_categories');
+                        const categories = await response.json();
+
+                        if (categories.error) {
+                            console.error("❌ Error fetching categories:", categories.error);
+                            return;
+                        }
+
+                        categories.forEach(cat => {
+                            const checkbox = document.createElement("input");
+                            checkbox.type = "checkbox";
+                            checkbox.id = `category_${cat}`;
+                            checkbox.name = "category";
+                            checkbox.value = cat;
+
+                            const label = document.createElement("label");
+                            label.htmlFor = `category_${cat}`;
+                            label.textContent = cat;
+
+                            categoryDiv.appendChild(checkbox);
+                            categoryDiv.appendChild(label);
+                            categoryDiv.appendChild(document.createElement("br")); // New line
+                        });
+
+                        // ✅ Add input field for new categories dynamically
+                        const newCategoryLabel = document.createElement("label");
+                        newCategoryLabel.htmlFor = "new_category";
+                        newCategoryLabel.textContent = "Add New Category:";
+
+                        const newCategoryInput = document.createElement("input");
+                        newCategoryInput.type = "text";
+                        newCategoryInput.id = "new_category";
+                        newCategoryInput.name = "new_category";
+                        newCategoryInput.placeholder = "Enter new categories, comma-separated";
+
+                        categoryDiv.appendChild(newCategoryLabel);
+                        categoryDiv.appendChild(document.createElement("br"));
+                        categoryDiv.appendChild(newCategoryInput);
+
+                        console.log("✅ Categories loaded:", categories);
+                    } catch (error) {
+                        console.error("❌ Error fetching categories:", error);
+                    }
+                } 
+                else if (field.id === "aliases") {
+                    const inputDiv = document.createElement("div");
+                    inputDiv.className = "input-group";
+                    inputDiv.innerHTML = `<label for="${field.id}">${field.label}:</label><br>
+                                        <input type="text" id="${field.id}" name="${field.id}" placeholder="Enter aliases, comma-separated">
+                                        <div id="formatted_aliases" style="font-style: italic; color: gray; margin-top: 5px;"></div>`;
+                    dynamicFields.appendChild(inputDiv);
+
+                    // ✅ Add real-time update event
+                    document.getElementById(field.id).addEventListener("input", updateAliasDisplay);
+                }
+                else {
+                    // ✅ Handle other fields normally
+                    if (field.useFilePath) {
+                        value = fileLocation + (field.suffix || "");
+                    } else if (field.useFileName) {
+                        value = getFileNameWithoutExtension(fileLocation);
+                    } else if (field.generate) {
+                        const assemblyName = getFileNameWithoutExtension(fileLocation);
+                        value = assemblyName ? `${assemblyName}-${Date.now()}` : "";
+                    } else if (field.value) {
+                        value = field.value;
+                    }
+
+                    const inputDiv = document.createElement("div");
+                    inputDiv.className = "input-group";
+                    inputDiv.innerHTML = `<label for="${field.id}">${field.label}:</label><br>
+                                        <input type="text" id="${field.id}" name="${field.id}" value="${value}" required>`;
+                    dynamicFields.appendChild(inputDiv);
+                }
             });
+
+
         }
-    </script>
+
+
+    
+        function handleTypeSwitch() {
+            if (!fieldDefinitionsLoaded) {
+                console.warn("⚠️ Field definitions not loaded yet.");
+                return;
+            }
+
+            const isAssembly = document.getElementById("assembly").checked;
+            const trackFileTypeSection = document.getElementById("track_file_type_section");
+            const assemblyFastaTypeSection = document.getElementById("assembly_fasta_type_section");
+            const autoDetectRadio = document.getElementById("auto_detect");
+            const manualSelect = document.getElementById("manual_select");
+            const fileLocation = document.getElementById("file_location").value.trim();
+            const dynamicFields = document.getElementById("dynamic_fields");
+
+            // Toggle visibility of sections
+            trackFileTypeSection.style.display = isAssembly ? "none" : "block";
+            assemblyFastaTypeSection.style.display = isAssembly ? "block" : "none";
+
+            const fileParts = fileLocation.toLowerCase().split('.');
+            let fileExtension = fileParts.pop();
+            if (fileExtension === "gz" && fileParts.length > 0) {
+                fileExtension = fileParts.pop();
+            }
+
+            if (isAssembly) {
+                // 🔹 Reset file type mode to auto-detect when switching to Assembly
+                autoDetectRadio.checked = true;
+                manualSelect.disabled = true;
+                manualSelect.classList.add("disabled");
+
+                // 🔹 Check if the file type is valid for Assembly
+                const detectedType = assemblyFileTypes[fileExtension] || "";
+                if (detectedType) {
+                    updateDynamicFields(detectedType);
+                } else {
+                    dynamicFields.innerHTML = "";  // 🔹 Clear fields if no valid assembly file type
+                }
+            } else {
+                // 🔹 Switching to Track: Check if the file type is valid for Track
+                const detectedType = trackFileTypes[fileExtension] || "";
+                if (detectedType) {
+                    updateDynamicFields(detectedType);
+                } else {
+                    dynamicFields.innerHTML = "";  // 🔹 Clear fields if no valid track file type
+                }
+            }
+        }
+        
+        function getSelectedCategories() {
+            let selectedCategories = [];
+
+            // ✅ Get checked categories
+            document.querySelectorAll("#dynamic_fields input[name='category']:checked").forEach(checkbox => {
+                selectedCategories.push(checkbox.value);
+            });
+
+            // ✅ Get new categories (split by commas)
+            const newCategories = document.getElementById("new_category")?.value.trim();
+            if (newCategories) {
+                selectedCategories.push(...newCategories.split(",").map(cat => cat.trim()));
+            }
+
+            selectedCategories = selectedCategories.filter(Boolean); // Remove empty values
+
+            // ✅ Dynamically update the label
+            const resultDiv = document.getElementById("selected_categories_display");
+            resultDiv.innerHTML = `<strong>Selected & New Categories:</strong> ${selectedCategories.join(", ")}`;
+
+            return selectedCategories;
+        }
+
+        function updateAliasDisplay() {
+            const aliasInput = document.getElementById("aliases");
+            const aliasDisplay = document.getElementById("formatted_aliases");
+
+            if (!aliasInput || !aliasDisplay) return;
+
+            // ✅ Trim spaces and remove empty values
+            const aliases = aliasInput.value
+                .split(",")
+                .map(alias => alias.trim())
+                .filter(Boolean);
+
+            // ✅ Update the display
+            aliasDisplay.textContent = aliases.length > 0 ? `Aliases: ${aliases.join(", ")}` : "";
+        }
+
+        document.addEventListener("DOMContentLoaded", function() {
+            document.addEventListener("change", function(event) {
+                if (event.target.matches("input[name='category'], #new_category")) {
+                    getSelectedCategories(); // 🔹 Update live whenever a selection changes
+                }
+            });
+        });
+
+    
+    </script>    
 </head>
 <body>
     <h1>JBrowse Data Submission</h1>
@@ -139,37 +404,64 @@
             <input type="text" id="file_location" name="file_location" oninput="detectFileType()" required>
         </div>
 
+        <!-- Assembly or Track Selection -->
         <div class="input-group">
-            <label>File Type Selection:</label><br>
-            <input type="radio" id="auto_detect" name="file_type_mode" value="auto" checked onclick="toggleFileTypeMode()">
-            <label for="auto_detect">Detect File</label>
-            <input type="radio" id="manual_radio" name="file_type_mode" value="manual" onclick="toggleFileTypeMode()">
-            <label for="manual_radio">Manual</label>
+            <label>Insert Data As:</label><br>
+            <input type="radio" id="assembly" name="data_category" value="assembly" checked onclick="handleTypeSwitch()">
+            <label for="assembly">Assembly</label>
+            <input type="radio" id="track" name="data_category" value="track" onclick="handleTypeSwitch()">
+            <label for="track">Track</label>
+
         </div>
 
-        <div class="input-group">
-            <label>Detected File Type:</label><br>
-            <div id="file_type_display" class="file-type-display">Detecting...</div>
+        <div id="assembly_fasta_type_section" class="input-group">
+            <label>Select FASTA Type:</label><br>
+            <!-- 🔹 Indexed FASTA is now the first option and the default checked -->
+            <input type="radio" id="indexed" name="fasta_type" value="IndexedFastaAdapter" checked onclick="updateDynamicFields(document.getElementById('file_type_display').textContent.replace('Detected: ', ''));">
+            <label for="indexed">Indexed FASTA</label>
+        
+            <input type="radio" id="bgzip" name="fasta_type" value="BgzipFastaAdapter" onclick="updateDynamicFields(document.getElementById('file_type_display').textContent.replace('Detected: ', ''));">
+            <label for="bgzip">BgZip FASTA</label>
         </div>
 
-        <div class="input-group">
-            <label for="manual_select">Override File Type:</label><br>
-            <select id="manual_select" name="file_type" disabled class="disabled" onchange="updateDynamicFields(this.value)">
-                <option value="" selected hidden>Select a file type</option>
-                <option value="Fasta">Fasta</option>
-                <option value="VCF">VCF</option>
-                <option value="BAM">BAM</option>
-                <option value="CRAM">CRAM</option>
-                <option value="GFF">GFF</option>
-                <option value="BED">BED</option>
-                <option value="PAF">PAF</option>
-                <option value="Delta">Delta</option>
-            </select>
+        <div id="track_file_type_section" style="display: none;">
+            <div class="input-group">
+                <label>File Type Selection:</label><br>
+                <input type="radio" id="auto_detect" name="file_type_mode" value="auto" checked onclick="toggleFileTypeMode()">
+                <label for="auto_detect">Detect File</label>
+                <input type="radio" id="manual_radio" name="file_type_mode" value="manual" onclick="toggleFileTypeMode()">
+                <label for="manual_radio">Manual</label>
+            </div>
+        
+            <div id="detected_file_type" class="input-group">
+                <label>Detected File Type:</label><br>
+                <div id="file_type_display" class="file-type-display">Detecting...</div>
+            </div>
+        
+            <div id="override_file_type" class="input-group">
+                <label for="manual_select">Override File Type:</label><br>
+                <select id="manual_select" name="file_type" disabled class="disabled" onchange="updateDynamicFields(this.value)">
+                    <option value="" selected hidden>Select a file type</option>
+                    <option value="VCF">VCF</option>
+                    <option value="BAM">BAM</option>
+                    <option value="CRAM">CRAM</option>
+                    <option value="GFF">GFF</option>
+                    <option value="BED">BED</option>
+                    <option value="PAF">PAF</option>
+                    <option value="DELTA">Delta</option>
+                </select>
+            </div>
         </div>
+        
 
         <div id="dynamic_fields"></div>
 
         <button type="submit">Submit</button>
+
+        <div id="selected_categories_display" style="margin-top: 15px; font-weight: bold; color: green;">
+            Selected & New Categories:
+        </div>
+
     </form>
 </body>
 </html>

@@ -1,0 +1,101 @@
+{
+    "IndexedFasta": {
+        "fields": [
+            { "label": "Assembly Name", "id": "name", "useFileName": true },
+            { "label": "Aliases", "id": "aliases" },
+            { "label": "Sequence Type", "id": "sequence_type", "value": "ReferenceSequenceTrack" },
+            { "label": "Sequence Track ID", "id": "sequence_trackId", "generate": true },
+            { "label": "Display Name", "id": "displayName", "useFileName": true },
+            { "label": "FASTA Location", "id": "fastaLocation", "useFilePath": true },
+            { "label": "FAI Index Location", "id": "faiLocation", "useFilePath": true, "suffix": ".fai" },
+            { "label": "Metadata Location", "id": "metadataLocation", "value": "/path/to/fa.metadata.yaml" }
+        ]
+    },
+    "BgzipFasta": {
+        "fields": [
+            { "label": "Assembly Name", "id": "name", "useFileName": true },
+            { "label": "Aliases", "id": "aliases" },
+            { "label": "Sequence Type", "id": "sequence_type", "value": "ReferenceSequenceTrack" },
+            { "label": "Sequence Track ID", "id": "sequence_trackId", "generate": true },
+            { "label": "Display Name", "id": "displayName", "useFileName": true },
+            { "label": "FASTA Location", "id": "fastaLocation", "useFilePath": true },
+            { "label": "FAI Index Location", "id": "faiLocation", "useFilePath": true, "suffix": ".fai" },
+            { "label": "GZI Index Location", "id": "gziLocation", "useFilePath": true, "suffix": ".gzi" },
+            { "label": "Metadata Location", "id": "metadataLocation", "value": "/path/to/fa.metadata.yaml" }
+        ]
+    },
+    "VCF": {
+        "fields": [
+            { "label": "Track ID", "id": "trackId", "generate": true },
+            { "label": "Type", "id": "type", "value": "VariantTrack" },
+            { "label": "Name", "id": "name", "useFileName": true },
+            { "label": "Assembly Names", "id": "assemblyNames" },
+            { "label": "Category", "id": "category" },
+            { "label": "Adapter Type", "id": "adapterType", "value": "VcfTabixAdapter" },
+            { "label": "VCF Location", "id": "vcfGzLocation", "useFilePath": true },
+            { "label": "Index Location", "id": "indexLocation", "useFilePath": true, "suffix": ".tbi" }
+        ]
+    },
+    "BAM": {
+        "fields": [
+            { "label": "Track ID", "id": "trackId", "generate": true },
+            { "label": "Type", "id": "type", "value": "AlignmentsTrack" },
+            { "label": "Name", "id": "name", "useFileName": true },
+            { "label": "Assembly Names", "id": "assemblyNames" },
+            { "label": "Category", "id": "category" },
+            { "label": "Adapter Type", "id": "adapterType", "value": "BamAdapter" },
+            { "label": "BAM Location", "id": "bamLocation", "useFilePath": true },
+            { "label": "Index Location", "id": "indexLocation", "useFilePath": true, "suffix": ".bai" },
+            { "label": "sequence Adapter ID", "id": "sequenceAdapterId" },
+            { "label": "sequence Adapter Type", "id": "sequenceAdapterType" }
+        ]
+    },
+    "CRAM": {
+        "fields": [
+            { "label": "Track ID", "id": "trackId", "generate": true },
+            { "label": "Type", "id": "type", "value": "AlignmentsTrack" },
+            { "label": "Name", "id": "name", "useFileName": true },
+            { "label": "Assembly Names", "id": "assemblyNames" },
+            { "label": "Category", "id": "category" },
+            { "label": "Adapter Type", "id": "adapterType", "value": "CramAdapter" },
+            { "label": "CRAM Location", "id": "cramLocation", "useFilePath": true },
+            { "label": "Crai Location", "id": "craiLocation", "useFilePath": true, "suffix": ".crai" },
+            { "label": "sequence Adapter ID", "id": "sequenceAdapterId" },
+            { "label": "sequence Adapter Type", "id": "sequenceAdapterType" }
+        ]
+    },
+    "BED": {
+        "fields": [
+            { "label": "Track ID", "id": "trackId", "generate": true },
+            { "label": "Type", "id": "type", "value": "FeatureTrack" },
+            { "label": "Name", "id": "name", "useFileName": true },
+            { "label": "Assembly Names", "id": "assemblyNames" },
+            { "label": "Category", "id": "category" },
+            { "label": "Adapter Type", "id": "adapterType", "value": "BedTabixAdapter" },
+            { "label": "BED Location", "id": "bedGzLocation", "useFilePath": true },
+            { "label": "Index Location", "id": "indexLocation", "useFilePath": true, "suffix": ".tbi" }
+        ]
+    },
+    "PAF": {
+        "fields": [
+            { "label": "Track ID", "id": "trackId", "generate": true },
+            { "label": "Type", "id": "type", "value": "SyntenyTrack" },
+            { "label": "Name", "id": "name", "useFileName": true },
+            { "label": "Assembly Names", "id": "assemblyNames" },
+            { "label": "Category", "id": "category" },
+            { "label": "Adapter Type", "id": "adapterType", "value": "PAFAdapter" },
+            { "label": "PAF Location", "id": "pafLocation", "useFilePath": true }
+        ]
+    },
+    "DELTA": {
+        "fields": [
+            { "label": "Track ID", "id": "trackId", "generate": true },
+            { "label": "Type", "id": "type", "value": "SyntenyTrack" },
+            { "label": "Name", "id": "name", "useFileName": true },
+            { "label": "Assembly Names", "id": "assemblyNames" },
+            { "label": "Category", "id": "category" },
+            { "label": "Adapter Type", "value": "DeltaAdapter" },
+            { "label": "DELTA Location", "id": "deltaLocation", "useFilePath": true }
+        ]
+    }
+}

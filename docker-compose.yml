@@ -44,6 +44,17 @@ services:
       - ./flask_webform:/app
     restart: unless-stopped
 
+  script_runner:
+    build: ./scripts  # ✅ Create a Dockerfile inside the "scripts" folder
+    container_name: script_runner
+    volumes:
+      - ./scripts:/scripts  # ✅ Mount the scripts folder
+      - ./config:/config  # ✅ Mount the config folder so the script can access config.json
+    depends_on:
+      - postgres  # ✅ Ensure PostgreSQL is running before running scripts
+    working_dir: /scripts  # ✅ Set working directory
+    entrypoint: ["tail", "-f", "/dev/null"]  # ✅ Keeps the container running so you can exec into it
+
 
 volumes:
   postgres_data:

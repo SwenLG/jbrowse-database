@@ -7,7 +7,7 @@ DB_CONFIG = {
     'dbname': 'jbrowse_config',
     'user': 'swen',
     'password': 'cremers',
-    'host': 'localhost',
+    'host': 'postgres',
     'port': 5432
 }
 
