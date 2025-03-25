@@ -272,8 +272,57 @@
                     // ✅ Add real-time update event
                     document.getElementById(field.id).addEventListener("input", updateAliasDisplay);
                 }
-                else {
-                    // ✅ Handle other fields normally
+                else if (field.type === "multi-select") {
+                    // ✅ Create checkboxes for multi-select fields like "Displays"
+                    const checkBoxDiv = document.createElement("div");
+                    checkBoxDiv.className = "input-group";
+                    checkBoxDiv.innerHTML = `<label>${field.label}:</label><br>`;
+
+                    field.options.forEach(option => {
+                        const checkbox = document.createElement("input");
+                        checkbox.type = "checkbox";
+                        checkbox.id = `display_${option}`;
+                        checkbox.name = "display";
+                        checkbox.value = option;
+                        checkbox.checked = option === field.default; // ✅ Pre-check the default display
+
+                        const label = document.createElement("label");
+                        label.htmlFor = `display_${option}`;
+                        label.textContent = option;
+
+                        checkBoxDiv.appendChild(checkbox);
+                        checkBoxDiv.appendChild(label);
+                        checkBoxDiv.appendChild(document.createElement("br")); // Line break for readability
+                    });
+
+                    // ✅ Add radio buttons to select the default display
+                    const defaultDisplayDiv = document.createElement("div");
+                    defaultDisplayDiv.className = "input-group";
+                    defaultDisplayDiv.innerHTML = `<label>Select Default Display:</label><br>`;
+
+                    field.options.forEach(option => {
+                        const radio = document.createElement("input");
+                        radio.type = "radio";
+                        radio.id = `default_display_${option}`;
+                        radio.name = "default_display";
+                        radio.value = option;
+                        radio.checked = option === field.default; // ✅ Set default display
+
+                        const label = document.createElement("label");
+                        label.htmlFor = `default_display_${option}`;
+                        label.textContent = option;
+
+                        defaultDisplayDiv.appendChild(radio);
+                        defaultDisplayDiv.appendChild(label);
+                        defaultDisplayDiv.appendChild(document.createElement("br")); // New line
+                    });
+
+                    dynamicFields.appendChild(checkBoxDiv);
+                    dynamicFields.appendChild(defaultDisplayDiv);
+
+                } else {
+                    // ✅ Keep the original logic for normal input fields
+                    let value = "";
                     if (field.useFilePath) {
                         value = fileLocation + (field.suffix || "");
                     } else if (field.useFileName) {
@@ -291,6 +340,7 @@
                                         <input type="text" id="${field.id}" name="${field.id}" value="${value}" required>`;
                     dynamicFields.appendChild(inputDiv);
                 }
+
             });
 
 
@@ -394,11 +444,14 @@
         });
 
     
-    </script>    
+    </script> 
+
+    <!-- External script for API interactions -->
+    <script src="static/js/api.js"></script>   
 </head>
 <body>
     <h1>JBrowse Data Submission</h1>
-    <form onsubmit="event.preventDefault(); updateDynamicFields(document.getElementById('manual_select').value || document.getElementById('file_type_display').textContent.replace('Detected: ', ''));">
+    <form onsubmit="event.preventDefault(); submitAssemblyForm(event);">
         <div class="input-group">
             <label for="file_location">File Location:</label><br>
             <input type="text" id="file_location" name="file_location" oninput="detectFileType()" required>

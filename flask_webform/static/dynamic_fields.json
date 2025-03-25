@@ -8,7 +8,8 @@
             { "label": "Display Name", "id": "displayName", "useFileName": true },
             { "label": "FASTA Location", "id": "fastaLocation", "useFilePath": true },
             { "label": "FAI Index Location", "id": "faiLocation", "useFilePath": true, "suffix": ".fai" },
-            { "label": "Metadata Location", "id": "metadataLocation", "value": "/path/to/fa.metadata.yaml" }
+            { "label": "Metadata Location", "id": "metadataLocation", "value": "/path/to/fa.metadata.yaml" },
+            { "label": "Displays", "id": "displays", "type": "multi-select", "options": ["LinearReferenceSequenceDisplay", "LinearGCContentDisplay"], "default": "LinearReferenceSequenceDisplay" }
         ]
     },
     "BgzipFasta": {
@@ -21,7 +22,8 @@
             { "label": "FASTA Location", "id": "fastaLocation", "useFilePath": true },
             { "label": "FAI Index Location", "id": "faiLocation", "useFilePath": true, "suffix": ".fai" },
             { "label": "GZI Index Location", "id": "gziLocation", "useFilePath": true, "suffix": ".gzi" },
-            { "label": "Metadata Location", "id": "metadataLocation", "value": "/path/to/fa.metadata.yaml" }
+            { "label": "Metadata Location", "id": "metadataLocation", "value": "/path/to/fa.metadata.yaml" },
+            { "label": "Displays", "id": "displays", "type": "multi-select", "options": ["LinearReferenceSequenceDisplay", "LinearGCContentDisplay"], "default": "LinearReferenceSequenceDisplay" }
         ]
     },
     "VCF": {
