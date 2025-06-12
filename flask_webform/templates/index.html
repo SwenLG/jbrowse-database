@@ -26,21 +26,50 @@
             opacity: 0.5;
             pointer-events: none;
         }
+        #tab_selector button {
+            padding: 8px 16px;
+            margin: 4px;
+            cursor: pointer;
+        }
+
+        #tab_selector button.active {
+            background-color: #007bff;
+            color: white;
+            border: none;
+        }
+
+        #batch_submit_button {
+            background-color: #4CAF50; /* Green */
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            cursor: pointer;
+            font-weight: bold;
+            border-radius: 4px;
+            transition: background-color 0.2s ease;
+        }
+
+        #batch_submit_button:disabled {
+            background-color: #ccc;
+            color: #666;
+            cursor: not-allowed;
+        }
+
     </style>
     <script>
 
         let fieldDefinitions = {};  // Global object to store the JSON data
         let fieldDefinitionsLoaded = false;  // Track if field definitions are loaded
-    
+        
         // 🔹 Load the JSON file BEFORE using it
         async function loadFieldDefinitions() {
             try {
-                const response = await fetch('/dynamic_fields.json');  // ✅ Fetch JSON
+                const response = await fetch('/dynamic_fields.json');  //  Fetch JSON
                 fieldDefinitions = await response.json();
-                fieldDefinitionsLoaded = true; // ✅ Mark as loaded
-                console.log("✅ Field definitions loaded:", fieldDefinitions);
+                fieldDefinitionsLoaded = true; //  Mark as loaded
+                console.log(" Field definitions loaded:", fieldDefinitions);
             } catch (error) {
-                console.error("❌ Error loading field definitions:", error);
+                console.error(" Error loading field definitions:", error);
             }
         }
     
@@ -59,23 +88,71 @@
             "paf": "PAF",
             "delta": "DELTA"
         };
-    
-        async function detectFileType() {
-            if (!fieldDefinitionsLoaded) {
-                console.warn("⚠️ Field definitions not loaded yet. Waiting...");
+        
+
+        async function handleFileLocationChange() {
+            const filePath = document.getElementById("file_location").value.trim();
+            const feedbackSpan = document.getElementById("file_location_feedback");
+            const isAssembly = document.getElementById("assembly").checked;
+
+            if (!filePath) {
+                feedbackSpan.textContent = "";
+                feedbackSpan.title = "";
                 return;
             }
 
-            if (!document.getElementById("auto_detect").checked) return;
+            try {
+                const response = await fetch("/validate_path", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({
+                        path: filePath,
+                        category: isAssembly ? "assembly" : "track"
+                    })
+                });
+
+                const result = await response.json();
+
+                if (result.valid && result.typeMatch) {
+                    feedbackSpan.textContent = "✅";
+                    feedbackSpan.style.color = "green";
+                    feedbackSpan.title = "Path is valid and matches selected type";
+                } else if (result.valid && !result.typeMatch) {
+                    feedbackSpan.textContent = "⚠️";
+                    feedbackSpan.style.color = "goldenrod";
+                    feedbackSpan.title = `This file looks like a ${result.inferred}, but you selected a different data type.`;
+
+                } else {
+                    feedbackSpan.textContent = "❌";
+                    feedbackSpan.style.color = "red";
+                    feedbackSpan.title = "File not found";
+                }
+
+            } catch (error) {
+                console.error("Validation error:", error);
+                feedbackSpan.textContent = "❌";
+                feedbackSpan.style.color = "red";
+                feedbackSpan.title = "Validation error";
+            }
+
+            // Still trigger type detection
+            detectFileType();
+        }
+
+
+
+        async function detectFileType() {
+            if (!fieldDefinitionsLoaded) {
+                console.warn(" Field definitions not loaded yet. Waiting...");
+                return;
+            }
 
             const filePath = document.getElementById("file_location").value.trim();
-            const fileTypeDisplay = document.getElementById("file_type_display");
             const dynamicFields = document.getElementById("dynamic_fields");
 
             // 🔹 If the file path is empty, clear the fields and return
             if (!filePath) {
-                fileTypeDisplay.textContent = "Detecting...";
-                dynamicFields.innerHTML = "";  // ✅ Clear fields when input is empty
+                dynamicFields.innerHTML = "";  //  Clear fields when input is empty
                 return;
             }
 
@@ -89,31 +166,51 @@
             const fileTypeMap = isAssembly ? assemblyFileTypes : trackFileTypes;
 
             if (!fileTypeMap) {
-                console.error("❌ Field definitions not found for this category.");
-                dynamicFields.innerHTML = "";  // ✅ Ensure fields are cleared on error
+                console.error(" Field definitions not found for this category.");
+                dynamicFields.innerHTML = "";  //  Ensure fields are cleared on error
                 return;
             }
 
             const detectedType = fileTypeMap[fileExtension] || "";
 
             if (detectedType) {
-                fileTypeDisplay.textContent = `Detected: ${detectedType}`;
                 updateDynamicFields(detectedType);
             } else {
-                fileTypeDisplay.textContent = "Detecting...";
-                dynamicFields.innerHTML = "";  // ✅ Clear fields when the file type is invalid
+                dynamicFields.innerHTML = "";  //  Clear fields when the file type is invalid
             }
         }
 
     
         // 🔹 Load JSON before allowing detection
         window.onload = async () => {
-            await loadFieldDefinitions();  // ✅ Ensure JSON is available before functions run
-        };
+            await loadFieldDefinitions();
+
+            // Tab switch logic
+            document.getElementById("tab_single").addEventListener("click", () => {
+                document.getElementById("single_insert_tab").style.display = "block";
+                document.getElementById("batch_insert_tab").style.display = "none";
+                document.getElementById("tab_single").classList.add("active");
+                document.getElementById("tab_batch").classList.remove("active");
+            });
+
+            document.getElementById("tab_batch").addEventListener("click", () => {
+                document.getElementById("single_insert_tab").style.display = "none";
+                document.getElementById("batch_insert_tab").style.display = "block";
+                document.getElementById("tab_single").classList.remove("active");
+                document.getElementById("tab_batch").classList.add("active");
+            });
+
+            //Setup batch insert buttons
+            document.getElementById("batch_continue_button").addEventListener("click", () => {
+                updateBatchDynamicFields("BAM");
+            });
+
+            document.getElementById("submit_batch_tracks").addEventListener("click", submitBatchBAMs);
+                    };
     
         function toggleFileTypeMode() {
             if (!fieldDefinitionsLoaded) {
-                console.warn("⚠️ Field definitions not loaded yet.");
+                console.warn(" Field definitions not loaded yet.");
                 return;
             }
     
@@ -136,7 +233,7 @@
         
         function updateDynamicFields(fileType) {
             if (!fieldDefinitionsLoaded) {
-                console.warn("⚠️ Field definitions not loaded yet.");
+                console.warn(" Field definitions not loaded yet.");
                 return;
             }
 
@@ -155,10 +252,10 @@
 
             // 🔹 Determine the correct file type for FASTA, but only if the file is valid
             if (isAssembly) {
-                const validFastaRegex = /\.(fa|fasta)(\.gz)?$/i;  // ✅ Matches .fa, .fasta, .fa.gz, .fasta.gz
+                const validFastaRegex = /\.(fa|fasta)(\.gz)?$/i;  //  Matches .fa, .fasta, .fa.gz, .fasta.gz
 
                 if (!validFastaRegex.test(fileLocation)) {
-                    console.warn("⚠️ No valid FASTA file detected in the location box.");
+                    console.warn(" No valid FASTA file detected in the location box.");
                     return;
                 }
 
@@ -166,7 +263,7 @@
             }
 
             if (!fileType || !fieldDefinitions[fileType]) {
-                console.warn(`⚠️ No field definitions found for fileType: ${fileType}`);
+                console.warn(` No field definitions found for fileType: ${fileType}`);
                 return;
             }
 
@@ -175,28 +272,74 @@
             fields.forEach(async field => {
                 let value = "";
 
-                if (field.id === "assemblyNames") {
-                    // ✅ Create dropdown for Assembly Names
-                    const selectDiv = document.createElement("div");
-                    selectDiv.className = "input-group";
-                    selectDiv.innerHTML = `<label for="assemblyNames">${field.label}:</label><br>
-                                        <select id="assemblyNames" name="assemblyNames">
-                                            <option value="" selected hidden>Loading assemblies...</option>
-                                        </select>`;
-                    dynamicFields.appendChild(selectDiv);
+                if (field.id === "assemblyNames" && (fileType === "PAF" || fileType === "DELTA")) {
+                    //  PAF-specific: multi-checkbox setup
+                    const assemblyDiv = document.createElement("div");
+                    assemblyDiv.className = "input-group";
+                    assemblyDiv.innerHTML = `
+                        <label>${field.label} (Select at least 2):</label><br>
+                        <div id="assembly_checkboxes"></div>
+                        <div id="assembly_error" style="color: red; font-size: 12px; display: none;"> Please select at least two assemblies.</div>
+                    `;
+                    dynamicFields.appendChild(assemblyDiv);
 
-                    // ✅ Fetch and populate assemblies
                     try {
                         const response = await fetch('/get_assemblies');
                         const assemblies = await response.json();
 
                         if (assemblies.error) {
-                            console.error("❌ Error fetching assemblies:", assemblies.error);
+                            console.error(" Error fetching assemblies:", assemblies.error);
+                            return;
+                        }
+
+                        const container = document.getElementById("assembly_checkboxes");
+                        const checkboxContainer = document.getElementById("assembly_checkboxes");
+                        if (checkboxContainer) {
+                            checkboxContainer.innerHTML = ""; //only clear the checkbox div itself
+                        }
+
+                        assemblies.forEach(assembly => {
+                            const checkbox = document.createElement("input");
+                            checkbox.type = "checkbox";
+                            checkbox.name = "assemblyNames";
+                            checkbox.value = assembly;
+                            checkbox.id = `assembly_${assembly}`;
+
+                            const label = document.createElement("label");
+                            label.htmlFor = `assembly_${assembly}`;
+                            label.textContent = assembly;
+
+                            container.appendChild(checkbox);
+                            container.appendChild(label);
+                            container.appendChild(document.createElement("br"));
+                        });
+
+                        console.log(" Assemblies loaded (PAF):", assemblies);
+                    } catch (error) {
+                        console.error(" Error fetching assemblies:", error);
+                    }
+
+                } else if (field.id === "assemblyNames") {
+                    //  Standard <select> for non-PAF tracks
+                    const selectDiv = document.createElement("div");
+                    selectDiv.className = "input-group";
+                    selectDiv.innerHTML = `<label for="assemblyNames">${field.label}:</label><br>
+                                            <select id="assemblyNames" name="assemblyNames">
+                                                <option value="" selected hidden>Loading assemblies...</option>
+                                            </select>`;
+                    dynamicFields.appendChild(selectDiv);
+
+                    try {
+                        const response = await fetch('/get_assemblies');
+                        const assemblies = await response.json();
+
+                        if (assemblies.error) {
+                            console.error(" Error fetching assemblies:", assemblies.error);
                             return;
                         }
 
                         const dropdown = document.getElementById("assemblyNames");
-                        dropdown.innerHTML = '<option value="" selected hidden>Select an assembly</option>'; // ✅ Reset options
+                        dropdown.innerHTML = '<option value="" selected hidden>Select an assembly</option>';
 
                         assemblies.forEach(assembly => {
                             const option = document.createElement("option");
@@ -205,11 +348,11 @@
                             dropdown.appendChild(option);
                         });
 
-                        console.log("✅ Assemblies loaded:", assemblies);
+                        console.log(" Assemblies loaded (non-PAF):", assemblies);
                     } catch (error) {
-                        console.error("❌ Error fetching assemblies:", error);
+                        console.error(" Error fetching assemblies:", error);
                     }
-                } 
+                }
                 else if (field.id === "category") {
                     const categoryDiv = document.createElement("div");
                     categoryDiv.className = "input-group";
@@ -218,49 +361,224 @@
 
                     try {
                         const response = await fetch('/get_categories');
-                        const categories = await response.json();
+                        const categoryPaths = await response.json(); // [["WGS", "Batch 1"], ["WGS", "Batch 2", "Subbatch"]]
 
-                        if (categories.error) {
-                            console.error("❌ Error fetching categories:", categories.error);
+                        if (categoryPaths.error) {
+                            console.error("Error fetching categories:", categoryPaths.error);
                             return;
                         }
 
-                        categories.forEach(cat => {
-                            const checkbox = document.createElement("input");
-                            checkbox.type = "checkbox";
-                            checkbox.id = `category_${cat}`;
-                            checkbox.name = "category";
-                            checkbox.value = cat;
+                        // 🔹 Build tree from paths
+                        const categoryTree = {};
+                        for (const path of categoryPaths) {
+                            let node = categoryTree;
+                            for (const part of path) {
+                                if (!node[part]) node[part] = {};
+                                node = node[part];
+                            }
+                        }
 
-                            const label = document.createElement("label");
-                            label.htmlFor = `category_${cat}`;
-                            label.textContent = cat;
+                        // 🔹 Recursive renderer
+                        function renderTree(tree, parentPath = []) {
+                            const ul = document.createElement("ul");
+                            ul.style.listStyle = "none";
+                            ul.style.paddingLeft = "16px";
 
-                            categoryDiv.appendChild(checkbox);
-                            categoryDiv.appendChild(label);
-                            categoryDiv.appendChild(document.createElement("br")); // New line
-                        });
+                            Object.entries(tree).forEach(([name, children]) => {
+                                const fullPath = [...parentPath, name];
+                                const li = document.createElement("li");
 
-                        // ✅ Add input field for new categories dynamically
-                        const newCategoryLabel = document.createElement("label");
-                        newCategoryLabel.htmlFor = "new_category";
-                        newCategoryLabel.textContent = "Add New Category:";
+                                const checkbox = document.createElement("input");
+                                checkbox.type = "checkbox";
+                                checkbox.dataset.fullPath = fullPath.join("/");
+                                
+                                checkbox.addEventListener("change", (e) => {
+                                    if (e.target.checked) {
+                                        // Uncheck all other checkboxes
+                                        const allBoxes = categoryDiv.querySelectorAll("input[type='checkbox']");
+                                        allBoxes.forEach(box => {
+                                            if (box !== e.target) box.checked = false;
+                                        });
+                                    }
+                                });
 
-                        const newCategoryInput = document.createElement("input");
-                        newCategoryInput.type = "text";
-                        newCategoryInput.id = "new_category";
-                        newCategoryInput.name = "new_category";
-                        newCategoryInput.placeholder = "Enter new categories, comma-separated";
+                                const label = document.createElement("label");
+                                label.textContent = name;
+                                label.style.marginLeft = "6px";
 
-                        categoryDiv.appendChild(newCategoryLabel);
-                        categoryDiv.appendChild(document.createElement("br"));
-                        categoryDiv.appendChild(newCategoryInput);
+                                li.appendChild(checkbox);
+                                li.appendChild(label);
 
-                        console.log("✅ Categories loaded:", categories);
-                    } catch (error) {
-                        console.error("❌ Error fetching categories:", error);
+                                if (Object.keys(children).length > 0) {
+                                    const toggle = document.createElement("button");
+                                    toggle.textContent = "▶";
+                                    toggle.type = "button"; //PREVENT form submission
+                                    toggle.style.marginLeft = "6px";
+                                    toggle.style.cursor = "pointer";
+                                    toggle.addEventListener("click", () => {
+                                        childTree.style.display = childTree.style.display === "none" ? "block" : "none";
+                                        toggle.textContent = childTree.style.display === "none" ? "▶" : "▼";
+                                    });
+
+                                    li.insertBefore(toggle, checkbox);
+
+                                    const childTree = renderTree(children, fullPath);
+                                    childTree.style.display = "none";
+                                    li.appendChild(childTree);
+                                }
+
+                                ul.appendChild(li);
+                            });
+
+                            return ul;
+                        }
+                        
+                        function applyCategorySearch(query) {
+                            const allCheckboxes = categoryDiv.querySelectorAll("input[type='checkbox']");
+                            const minLength = 2;
+
+                            // 🔹 First, clear highlights and collapse everything that's unchecked
+                            allCheckboxes.forEach(checkbox => {
+                                const label = checkbox.nextSibling;
+                                const li = checkbox.closest("li");
+                                label.style.backgroundColor = "";
+
+                                const subTree = li.querySelector("ul");
+                                if (subTree && !checkbox.checked) {
+                                    subTree.style.display = "none";
+                                    const toggle = li.querySelector("button");
+                                    if (toggle) toggle.textContent = "▶";
+                                }
+                            });
+
+                            //Always keep selected categories open
+                            const checkedBoxes = categoryDiv.querySelectorAll("input[type='checkbox']:checked");
+                            checkedBoxes.forEach(box => {
+                                let currentLI = box.closest("li");
+
+                                while (currentLI) {
+                                    const subTree = currentLI.querySelector("ul");
+                                    if (subTree) subTree.style.display = "block";
+                                    const toggle = currentLI.querySelector("button");
+                                    if (toggle) toggle.textContent = "▼";
+                                    currentLI = currentLI.parentElement.closest("li");
+                                }
+                            });
+
+                            //Return early if query is too short (after restoring checked)
+                            if (!query || query.length < minLength) return;
+
+                            const queryLower = query.toLowerCase();
+
+                            allCheckboxes.forEach(checkbox => {
+                                const label = checkbox.nextSibling;
+                                const li = checkbox.closest("li");
+                                const name = label.textContent.trim().toLowerCase();
+
+                                if (name.includes(queryLower)) {
+                                    //Highlight the match
+                                    label.style.backgroundColor = "yellow";
+
+                                    //Expand ancestors of the match (but not children)
+                                    let currentLI = li.parentElement.closest("li");
+                                    while (currentLI) {
+                                        const subTree = currentLI.querySelector("ul");
+                                        if (subTree) subTree.style.display = "block";
+                                        const toggle = currentLI.querySelector("button");
+                                        if (toggle) toggle.textContent = "▼";
+                                        currentLI = currentLI.parentElement.closest("li");
+                                    }
+                                }
+                            });
+                        }
+
+
+                        const treeUI = renderTree(categoryTree);
+                        treeUI.className = "category-node";
+
+                        const searchDiv = document.createElement("div");
+                        searchDiv.innerHTML = `
+                            <input type="text" id="category_search" placeholder="Search categories..." style="margin-bottom: 10px; width: 80%;">
+                        `;
+                        categoryDiv.appendChild(searchDiv);
+
+                        const searchInput = searchDiv.querySelector("#category_search");
+                        if (searchInput) {
+                            searchInput.addEventListener("input", () => {
+                                applyCategorySearch(searchInput.value.trim());
+                            });
+}
+
+                        categoryDiv.appendChild(treeUI);
+
+                        // 🔹 Add interface to create new categories
+                        const newCatDiv = document.createElement("div");
+                        newCatDiv.style.marginTop = "10px";
+                        newCatDiv.innerHTML = `
+                            <label>Add New Category (comma-separated hierarchy):</label><br>
+                            <input type="text" id="new_category_path" placeholder="e.g. WGS, JKI Samples, Subbatch">
+                            <button type="button" id="add_category_btn">Add Category</button>
+                        `;
+                        categoryDiv.appendChild(newCatDiv);
+
+
+                        // 🔹 Add category creation logic
+                        const addCatBtn = document.getElementById("add_category_btn");
+                        if (addCatBtn) {
+                            addCatBtn.addEventListener("click", () => {
+                                const rawInput = document.getElementById("new_category_path").value.trim();
+                                if (!rawInput) return;
+
+                                const parts = rawInput.split(",").map(p => p.trim()).filter(Boolean);
+                                if (parts.length === 0) return;
+
+                                const treeContainer = categoryDiv.querySelector("ul");
+                                let currentLevel = treeContainer;
+                                let pathSoFar = [];
+
+                                for (let i = 0; i < parts.length; i++) {
+                                    const part = parts[i];
+                                    pathSoFar.push(part);
+                                    const fullPath = pathSoFar.join("/");
+
+                                    // Check if already exists
+                                    let existing = currentLevel.querySelector(`input[data-full-path="${fullPath}"]`);
+                                    if (existing) {
+                                        // If it exists and has children, go deeper
+                                        const li = existing.closest("li");
+                                        let nextLevel = li.querySelector("ul");
+                                        if (!nextLevel) {
+                                            nextLevel = document.createElement("ul");
+                                            nextLevel.style.paddingLeft = "16px";
+                                            li.appendChild(nextLevel);
+                                        }
+                                        currentLevel = nextLevel;
+                                    } else {
+                                        // If it doesn’t exist, build it and descend
+                                        const remainingTree = buildNestedTree(parts.slice(i));
+                                        const newNode = renderTree(remainingTree, pathSoFar.slice(0, -1));
+
+                                        currentLevel.appendChild(newNode.firstChild);
+                                        currentLevel = newNode.firstChild.querySelector("ul") || currentLevel;
+                                    }
+                                }
+
+                                document.getElementById("new_category_path").value = "";
+                            });
+                        }
+
+                    //  Helper to build the nested category tree
+                    function buildNestedTree(parts) {
+                        if (parts.length === 0) return {};
+                        return { [parts[0]]: buildNestedTree(parts.slice(1)) };
                     }
-                } 
+
+                        console.log("Categories loaded:", categoryPaths);
+                    } catch (error) {
+                        console.error("Error fetching categories:", error);
+                    }
+                }
+ 
                 else if (field.id === "aliases") {
                     const inputDiv = document.createElement("div");
                     inputDiv.className = "input-group";
@@ -269,11 +587,15 @@
                                         <div id="formatted_aliases" style="font-style: italic; color: gray; margin-top: 5px;"></div>`;
                     dynamicFields.appendChild(inputDiv);
 
-                    // ✅ Add real-time update event
-                    document.getElementById(field.id).addEventListener("input", updateAliasDisplay);
+                    //  Add real-time update event
+                    const aliasInput = document.getElementById(field.id);
+                    if (aliasInput) {
+                        aliasInput.addEventListener("input", updateAliasDisplay);
+                    }
+
                 }
                 else if (field.type === "multi-select") {
-                    // ✅ Create checkboxes for multi-select fields like "Displays"
+                    //  Create checkboxes for multi-select fields like "Displays"
                     const checkBoxDiv = document.createElement("div");
                     checkBoxDiv.className = "input-group";
                     checkBoxDiv.innerHTML = `<label>${field.label}:</label><br>`;
@@ -284,7 +606,7 @@
                         checkbox.id = `display_${option}`;
                         checkbox.name = "display";
                         checkbox.value = option;
-                        checkbox.checked = option === field.default; // ✅ Pre-check the default display
+                        checkbox.checked = true; //  Pre-check the default display
 
                         const label = document.createElement("label");
                         label.htmlFor = `display_${option}`;
@@ -295,7 +617,11 @@
                         checkBoxDiv.appendChild(document.createElement("br")); // Line break for readability
                     });
 
-                    // ✅ Add radio buttons to select the default display
+                    //Add this before creating radio buttons
+                    console.log("📦 Field ID:", field.id);
+                    console.log("🔧 Options:", field.options);
+                    console.log("⭐ Default:", field.default);
+                    //  Add radio buttons to select the default display
                     const defaultDisplayDiv = document.createElement("div");
                     defaultDisplayDiv.className = "input-group";
                     defaultDisplayDiv.innerHTML = `<label>Select Default Display:</label><br>`;
@@ -306,7 +632,10 @@
                         radio.id = `default_display_${option}`;
                         radio.name = "default_display";
                         radio.value = option;
-                        radio.checked = option === field.default; // ✅ Set default display
+                        radio.checked = option === field.default; //  Set default display
+
+                        // 🔍 Add this line to check which one gets selected
+                        console.log(`🔘 Radio: ${option}, checked: ${option === field.default}`);
 
                         const label = document.createElement("label");
                         label.htmlFor = `default_display_${option}`;
@@ -321,7 +650,7 @@
                     dynamicFields.appendChild(defaultDisplayDiv);
 
                 } else {
-                    // ✅ Keep the original logic for normal input fields
+                    //  Keep the original logic for normal input fields
                     let value = "";
                     if (field.useFilePath) {
                         value = fileLocation + (field.suffix || "");
@@ -350,20 +679,16 @@
     
         function handleTypeSwitch() {
             if (!fieldDefinitionsLoaded) {
-                console.warn("⚠️ Field definitions not loaded yet.");
+                console.warn(" Field definitions not loaded yet.");
                 return;
             }
 
             const isAssembly = document.getElementById("assembly").checked;
-            const trackFileTypeSection = document.getElementById("track_file_type_section");
             const assemblyFastaTypeSection = document.getElementById("assembly_fasta_type_section");
-            const autoDetectRadio = document.getElementById("auto_detect");
-            const manualSelect = document.getElementById("manual_select");
             const fileLocation = document.getElementById("file_location").value.trim();
             const dynamicFields = document.getElementById("dynamic_fields");
 
             // Toggle visibility of sections
-            trackFileTypeSection.style.display = isAssembly ? "none" : "block";
             assemblyFastaTypeSection.style.display = isAssembly ? "block" : "none";
 
             const fileParts = fileLocation.toLowerCase().split('.');
@@ -373,48 +698,41 @@
             }
 
             if (isAssembly) {
-                // 🔹 Reset file type mode to auto-detect when switching to Assembly
-                autoDetectRadio.checked = true;
-                manualSelect.disabled = true;
-                manualSelect.classList.add("disabled");
-
-                // 🔹 Check if the file type is valid for Assembly
+                //Check if the file type is valid for Assembly
                 const detectedType = assemblyFileTypes[fileExtension] || "";
                 if (detectedType) {
                     updateDynamicFields(detectedType);
                 } else {
-                    dynamicFields.innerHTML = "";  // 🔹 Clear fields if no valid assembly file type
+                    dynamicFields.innerHTML = "";  //Clear fields if no valid assembly file type
                 }
             } else {
-                // 🔹 Switching to Track: Check if the file type is valid for Track
+                //Switching to Track: Check if the file type is valid for Track
                 const detectedType = trackFileTypes[fileExtension] || "";
                 if (detectedType) {
                     updateDynamicFields(detectedType);
                 } else {
-                    dynamicFields.innerHTML = "";  // 🔹 Clear fields if no valid track file type
+                    dynamicFields.innerHTML = "";  //Clear fields if no valid track file type
                 }
             }
+
+            handleFileLocationChange(); //Re-validate with new category after switching radio
         }
         
         function getSelectedCategories() {
             let selectedCategories = [];
 
-            // ✅ Get checked categories
+            //  Get checked categories
             document.querySelectorAll("#dynamic_fields input[name='category']:checked").forEach(checkbox => {
                 selectedCategories.push(checkbox.value);
             });
 
-            // ✅ Get new categories (split by commas)
+            //  Get new categories (split by commas)
             const newCategories = document.getElementById("new_category")?.value.trim();
             if (newCategories) {
                 selectedCategories.push(...newCategories.split(",").map(cat => cat.trim()));
             }
 
             selectedCategories = selectedCategories.filter(Boolean); // Remove empty values
-
-            // ✅ Dynamically update the label
-            const resultDiv = document.getElementById("selected_categories_display");
-            resultDiv.innerHTML = `<strong>Selected & New Categories:</strong> ${selectedCategories.join(", ")}`;
 
             return selectedCategories;
         }
@@ -425,20 +743,20 @@
 
             if (!aliasInput || !aliasDisplay) return;
 
-            // ✅ Trim spaces and remove empty values
+            //  Trim spaces and remove empty values
             const aliases = aliasInput.value
                 .split(",")
                 .map(alias => alias.trim())
                 .filter(Boolean);
 
-            // ✅ Update the display
+            //  Update the display
             aliasDisplay.textContent = aliases.length > 0 ? `Aliases: ${aliases.join(", ")}` : "";
         }
 
         document.addEventListener("DOMContentLoaded", function() {
             document.addEventListener("change", function(event) {
                 if (event.target.matches("input[name='category'], #new_category")) {
-                    getSelectedCategories(); // 🔹 Update live whenever a selection changes
+                    getSelectedCategories(); // Update live whenever a selection changes
                 }
             });
         });
@@ -451,70 +769,402 @@
 </head>
 <body>
     <h1>JBrowse Data Submission</h1>
-    <form onsubmit="event.preventDefault(); submitAssemblyForm(event);">
-        <div class="input-group">
-            <label for="file_location">File Location:</label><br>
-            <input type="text" id="file_location" name="file_location" oninput="detectFileType()" required>
-        </div>
-
-        <!-- Assembly or Track Selection -->
-        <div class="input-group">
-            <label>Insert Data As:</label><br>
-            <input type="radio" id="assembly" name="data_category" value="assembly" checked onclick="handleTypeSwitch()">
-            <label for="assembly">Assembly</label>
-            <input type="radio" id="track" name="data_category" value="track" onclick="handleTypeSwitch()">
-            <label for="track">Track</label>
-
-        </div>
-
-        <div id="assembly_fasta_type_section" class="input-group">
-            <label>Select FASTA Type:</label><br>
-            <!-- 🔹 Indexed FASTA is now the first option and the default checked -->
-            <input type="radio" id="indexed" name="fasta_type" value="IndexedFastaAdapter" checked onclick="updateDynamicFields(document.getElementById('file_type_display').textContent.replace('Detected: ', ''));">
-            <label for="indexed">Indexed FASTA</label>
-        
-            <input type="radio" id="bgzip" name="fasta_type" value="BgzipFastaAdapter" onclick="updateDynamicFields(document.getElementById('file_type_display').textContent.replace('Detected: ', ''));">
-            <label for="bgzip">BgZip FASTA</label>
-        </div>
-
-        <div id="track_file_type_section" style="display: none;">
+    <div id="tab_selector">
+        <button id="tab_single" class="active">Single Insert</button>
+        <button id="tab_batch">Batch Insert</button>
+    </div>
+    <div id="single_insert_tab">
+        <form onsubmit="event.preventDefault(); handleFormSubmission(event);">
             <div class="input-group">
-                <label>File Type Selection:</label><br>
-                <input type="radio" id="auto_detect" name="file_type_mode" value="auto" checked onclick="toggleFileTypeMode()">
-                <label for="auto_detect">Detect File</label>
-                <input type="radio" id="manual_radio" name="file_type_mode" value="manual" onclick="toggleFileTypeMode()">
-                <label for="manual_radio">Manual</label>
+                <label for="file_location">File Location:</label><br>
+                <input type="text" id="file_location" name="file_location"
+                        oninput="detectFileType(); handleFileLocationChange()" required>
+                <span id="file_location_feedback" style="margin-left: 8px;"></span>
             </div>
-        
-            <div id="detected_file_type" class="input-group">
-                <label>Detected File Type:</label><br>
-                <div id="file_type_display" class="file-type-display">Detecting...</div>
+
+            <!-- Assembly or Track Selection -->
+            <div class="input-group">
+                <label>Insert Data As:</label><br>
+                <input type="radio" id="assembly" name="data_category" value="assembly" checked onclick="handleTypeSwitch()">
+                <label for="assembly">Assembly</label>
+                <input type="radio" id="track" name="data_category" value="track" onclick="handleTypeSwitch()">
+                <label for="track">Track</label>
+
             </div>
-        
-            <div id="override_file_type" class="input-group">
-                <label for="manual_select">Override File Type:</label><br>
-                <select id="manual_select" name="file_type" disabled class="disabled" onchange="updateDynamicFields(this.value)">
-                    <option value="" selected hidden>Select a file type</option>
-                    <option value="VCF">VCF</option>
-                    <option value="BAM">BAM</option>
-                    <option value="CRAM">CRAM</option>
-                    <option value="GFF">GFF</option>
-                    <option value="BED">BED</option>
-                    <option value="PAF">PAF</option>
-                    <option value="DELTA">Delta</option>
-                </select>
+
+            <div id="assembly_fasta_type_section" class="input-group">
+                <label>Select FASTA Type:</label><br>
+                <!-- 🔹 Indexed FASTA is now the first option and the default checked -->
+                <input type="radio" id="indexed" name="fasta_type" value="IndexedFastaAdapter" checked onclick="detectFileType();">
+                <label for="indexed">Indexed FASTA</label>
+            
+                <input type="radio" id="bgzip" name="fasta_type" value="BgzipFastaAdapter" onclick="detectFileType();">
+                <label for="bgzip">BgZip FASTA</label>
             </div>
-        </div>
-        
 
-        <div id="dynamic_fields"></div>
+            <div id="dynamic_fields"></div>
 
-        <button type="submit">Submit</button>
+            <button type="submit">Submit</button>
 
-        <div id="selected_categories_display" style="margin-top: 15px; font-weight: bold; color: green;">
-            Selected & New Categories:
-        </div>
+        </form>
+    </div>
 
-    </form>
+
+
+    <div id="batch_insert_tab" style="display: none;">
+        <h3>Batch Insert</h3>
+        <div style="display: flex; gap: 20px; margin-top: 20px;">
+            <!-- File Paths -->
+            <div style="flex: 1;">
+              <label for="batch_file_paths"><strong>File Paths (one per line):</strong></label><br>
+              <textarea id="batch_file_paths" rows="12" style="width: 100%;" placeholder="e.g. /path/to/sample1.bam, /path/to/sample2.bam..." oninput="detectBatchFileType()"></textarea>
+            </div>
+          
+            <!-- Track Names -->
+            <div style="flex: 1;">
+              <label for="batch_track_names"><strong>Track Names (one per line):</strong></label><br>
+              <textarea id="batch_track_names" rows="12" style="width: 100%;" placeholder="e.g. Sample 1, Sample 2..." oninput="detectBatchFileType()"></textarea>
+            </div>
+          </div>
+          
+          <!-- Validation Feedback (hook up later) -->
+          <div id="batch_validation_feedback" style="margin-top: 15px; color: red; display: none;"></div>
+          
+          <div id="invalid_path_report" style="margin-top: 10px; display: none; color: red;"></div>
+
+          
+        <details id="invalid_path_details" style="display: none; margin-top: 5px;">
+            <summary style="cursor: pointer;">View invalid file paths</summary>
+            <pre id="invalid_path_list" style="white-space: pre-wrap; font-family: monospace; margin-top: 6px;"></pre>
+        </details>
+          
+          <button id="batch_continue_button" disabled>Continue</button>
+
+          <!-- Dynamic Fields for Batch Insert -->
+          <div id="batch_dynamic_fields" style="margin-top: 25px;"></div>
+
+          <button id="submit_batch_tracks" style="margin-top: 20px; display: none;">Batch Insert</button>
+
+    </div>
+      
+
+        <!-- Batch Insert Logic -->
+        <script>
+            let lastDetectedFileType = "";
+
+            document.getElementById("batch_continue_button").addEventListener("click", () => {
+                updateBatchDynamicFields("BAM");
+            });
+
+            document.getElementById("submit_batch_tracks").addEventListener("click", submitBatchBAMs);
+
+            async function validateBatchFilePaths() {
+                const rawPaths = document.getElementById("batch_file_paths").value;
+                const allPaths = rawPaths.split(/[\n,]+/).map(s => s.trim()).filter(Boolean);
+                const results = [];
+
+                for (let i = 0; i < allPaths.length; i++) {
+                    const path = allPaths[i];
+                    try {
+                        const response = await fetch("/validate_path", {
+                            method: "POST",
+                            headers: { "Content-Type": "application/json" },
+                            body: JSON.stringify({ path, category: "track" }) // assume batch = track
+                        });
+                        const result = await response.json();
+                        results.push({ line: i + 1, path, ...result });
+                    } catch (err) {
+                        results.push({ line: i + 1, path, valid: false, error: "Request failed" });
+                    }
+                }
+
+                return results;
+            }
+
+
+            async function detectBatchFileType() {
+                const rawPaths = document.getElementById("batch_file_paths").value;
+                const rawNames = document.getElementById("batch_track_names").value;
+    
+                const allPaths = rawPaths.split(/[\n,]+/).map(s => s.trim()).filter(Boolean);
+                const allNames = rawNames.split(/[\n,]+/).map(s => s.trim()).filter(Boolean);
+    
+                const feedback = document.getElementById("batch_validation_feedback");
+                feedback.style.display = "block";
+    
+                // Check 1: No paths entered
+                if (allPaths.length === 0) {
+                    feedback.style.color = "red";
+                    feedback.textContent = "\n\n❌ No file paths provided.";
+                    return;
+                }
+    
+                // Check 2: File type detection based on first path
+                const firstPath = allPaths[0].toLowerCase();
+                const parts = firstPath.split(".");
+                let extension = parts.pop();
+                if (extension === "gz" && parts.length > 0) {
+                    extension = parts.pop(); // Handle .bam.gz etc.
+                }
+    
+                const fileType = trackFileTypes[extension] || "";
+                lastDetectedFileType = fileType;
+
+    
+                if (!fileType) {
+                    feedback.style.color = "red";
+                    feedback.textContent = "\n\n❌ Unrecognized file type in the first path.";
+                    return;
+                }
+    
+                // Check 3: Mixed file types in the list
+                const allSameType = allPaths.every(p => {
+                    const pParts = p.toLowerCase().split(".");
+                    let ext = pParts.pop();
+                    if (ext === "gz" && pParts.length > 0) ext = pParts.pop();
+                    return trackFileTypes[ext] === fileType;
+                });
+    
+                if (!allSameType) {
+                    feedback.style.color = "red";
+                    feedback.textContent = "\n\n❌ Mixed file types detected. Ensure all files are of the same type.";
+                    return;
+                }
+    
+                // File type is valid and consistent
+                let message = `📁 Detected file type: ${fileType}`;
+                let hasError = false;
+                let hasWarning = false;
+    
+                // Check 4: Path count must match name count
+                if (allPaths.length !== allNames.length) {
+                    message += `\n\n⚠️ Mismatch: ${allPaths.length} file paths vs ${allNames.length} track names.`;
+                    hasWarning = true;
+                }
+    
+                // Check 5: All names must be unique
+                const uniqueNames = new Set(allNames);
+                if (uniqueNames.size !== allNames.length) {
+                    message += `\n\n⚠️ Track names must be unique. Found duplicates.`;
+                    hasWarning = true;
+                }
+    
+                // Check 6: Empty names or paths
+                const emptyNames = allNames.some(name => name.trim() === "");
+                const emptyPaths = allPaths.some(path => path.trim() === "");
+                if (emptyNames || emptyPaths) {
+                    message += `\n\n⚠️ Some track names or file paths are empty.`;
+                    hasWarning = true;
+                }
+                
+                const validationResults = await validateBatchFilePaths();
+                    const invalids = validationResults.filter(r => !r.valid);
+                    if (invalids.length > 0) {
+                        hasError = true;
+
+                        const lines = invalids.map(r => r.line).join(", ");
+                        message += `\n\n❌ ${invalids.length} invalid file path(s) detected:\n\n`;
+                        message += invalids.map(r => `${r.line}. ${r.path}`).join("\n\n");
+
+
+                    }
+
+
+                
+                // Update feedback styling
+                feedback.style.color = hasError ? "red" : hasWarning ? "gray" : "green";
+                feedback.textContent = message;
+    
+                // Enable button only if no errors or warnings
+                const allValid = !hasError && !hasWarning;
+                const submitButton = document.getElementById("batch_continue_button");
+                if (submitButton) {
+                    submitButton.disabled = !allValid;
+                    submitButton.classList.toggle("disabled", !allValid); // Optional: for CSS styling
+                }
+    
+                
+            }
+    
+            document.getElementById("batch_continue_button").addEventListener("click", () => {
+                updateDynamicFields(lastDetectedFileType, "batch_dynamic_fields");
+            });
+            
+            function updateBatchDynamicFields(fileType) {
+                if (!fieldDefinitionsLoaded || !fieldDefinitions[fileType]) {
+                    console.warn(`⛔ Field definitions not loaded or missing for: ${fileType}`);
+                    return;
+                }
+
+                const batchContainer = document.getElementById("batch_dynamic_fields");
+                batchContainer.innerHTML = ""; // Clear previous
+
+                const fields = fieldDefinitions[fileType].fields;
+
+                fields.forEach(async field => {
+                    // Only include shared/reusable fields
+                    if (["assemblyNames", "category", "displays"].includes(field.id)) {
+
+                        // Assembly dropdown (standard)
+                        if (field.id === "assemblyNames") {
+                            const wrapper = document.createElement("div");
+                            wrapper.className = "input-group";
+                            wrapper.innerHTML = `<label for="assemblyNames">${field.label}:</label><br>
+                                <select id="assemblyNames" name="assemblyNames">
+                                    <option value="" selected hidden>Loading assemblies...</option>
+                                </select>`;
+                            batchContainer.appendChild(wrapper);
+
+                            try {
+                                const res = await fetch('/get_assemblies');
+                                const assemblies = await res.json();
+
+                                const dropdown = document.getElementById("assemblyNames");
+                                dropdown.innerHTML = '<option value="" selected hidden>Select an assembly</option>';
+                                assemblies.forEach(name => {
+                                    const opt = document.createElement("option");
+                                    opt.value = name;
+                                    opt.textContent = name;
+                                    dropdown.appendChild(opt);
+                                });
+                            } catch (err) {
+                                console.error("❌ Error fetching assemblies:", err);
+                            }
+                        }
+
+                        // Category picker (same logic as before)
+                        else if (field.id === "category") {
+                            const categoryDiv = document.createElement("div");
+                            categoryDiv.className = "input-group";
+                            categoryDiv.innerHTML = `<label>${field.label}:</label><br>`;
+                            batchContainer.appendChild(categoryDiv);
+
+                            try {
+                                const res = await fetch('/get_categories');
+                                const categoryPaths = await res.json();
+
+                                // Convert to tree
+                                const tree = {};
+                                for (const path of categoryPaths) {
+                                    let node = tree;
+                                    for (const part of path) {
+                                        if (!node[part]) node[part] = {};
+                                        node = node[part];
+                                    }
+                                }
+
+                                const renderTree = (tree, parentPath = []) => {
+                                    const ul = document.createElement("ul");
+                                    ul.style.listStyle = "none";
+                                    ul.style.paddingLeft = "16px";
+
+                                    Object.entries(tree).forEach(([name, children]) => {
+                                        const fullPath = [...parentPath, name];
+                                        const li = document.createElement("li");
+
+                                        const checkbox = document.createElement("input");
+                                        checkbox.type = "checkbox";
+                                        checkbox.dataset.fullPath = fullPath.join("/");
+                                        checkbox.addEventListener("change", e => {
+                                            if (e.target.checked) {
+                                                categoryDiv.querySelectorAll("input[type='checkbox']").forEach(box => {
+                                                    if (box !== e.target) box.checked = false;
+                                                });
+                                            }
+                                        });
+
+                                        const label = document.createElement("label");
+                                        label.textContent = name;
+                                        label.style.marginLeft = "6px";
+
+                                        li.appendChild(checkbox);
+                                        li.appendChild(label);
+
+                                        if (Object.keys(children).length > 0) {
+                                            const toggle = document.createElement("button");
+                                            toggle.textContent = "▶";
+                                            toggle.type = "button";
+                                            toggle.style.marginLeft = "6px";
+                                            toggle.style.cursor = "pointer";
+
+                                            const subTree = renderTree(children, fullPath);
+                                            subTree.style.display = "none";
+
+                                            toggle.addEventListener("click", () => {
+                                                const show = subTree.style.display === "none";
+                                                subTree.style.display = show ? "block" : "none";
+                                                toggle.textContent = show ? "▼" : "▶";
+                                            });
+
+                                            li.insertBefore(toggle, checkbox);
+                                            li.appendChild(subTree);
+                                        }
+
+                                        ul.appendChild(li);
+                                    });
+
+                                    return ul;
+                                };
+
+                                categoryDiv.appendChild(renderTree(tree));
+                            } catch (err) {
+                                console.error("❌ Error fetching categories:", err);
+                            }
+                        }
+
+                        // Displays (multi-check + default radio)
+                        else if (field.id === "displays") {
+                            const checkDiv = document.createElement("div");
+                            checkDiv.className = "input-group";
+                            checkDiv.innerHTML = `<label>${field.label}:</label><br>`;
+
+                            field.options.forEach(option => {
+                                const checkbox = document.createElement("input");
+                                checkbox.type = "checkbox";
+                                checkbox.id = `display_${option}`;
+                                checkbox.name = "display";
+                                checkbox.value = option;
+                                checkbox.checked = true;
+
+                                const label = document.createElement("label");
+                                label.htmlFor = `display_${option}`;
+                                label.textContent = option;
+
+                                checkDiv.appendChild(checkbox);
+                                checkDiv.appendChild(label);
+                                checkDiv.appendChild(document.createElement("br"));
+                            });
+
+                            const radioDiv = document.createElement("div");
+                            radioDiv.className = "input-group";
+                            radioDiv.innerHTML = `<label>Select Default Display:</label><br>`;
+
+                            field.options.forEach(option => {
+                                const radio = document.createElement("input");
+                                radio.type = "radio";
+                                radio.id = `default_display_${option}`;
+                                radio.name = "default_display";
+                                radio.value = option;
+                                radio.checked = option === field.default;
+
+                                const label = document.createElement("label");
+                                label.htmlFor = `default_display_${option}`;
+                                label.textContent = option;
+
+                                radioDiv.appendChild(radio);
+                                radioDiv.appendChild(label);
+                                radioDiv.appendChild(document.createElement("br"));
+                            });
+
+                            batchContainer.appendChild(checkDiv);
+                            batchContainer.appendChild(radioDiv);
+                        }
+                    }
+                });
+                document.getElementById("submit_batch_tracks").style.display = "inline-block";
+            }
+
+
+        </script>
 </body>
 </html>

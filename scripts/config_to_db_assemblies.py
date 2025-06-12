@@ -48,16 +48,17 @@ def insert_indexed_fasta_adapter(adapter_data, assembly_id, cursor):
     print(f"Inserted IndexedFastaAdapter ID: {adapter_id}")
     return adapter_id
 
-def insert_displays(displays, track_id, cursor):
+def insert_displays(displays, parent_id, cursor, parent_type='Track'):
     """Insert displays for a track."""
     for display in displays:
         cursor.execute("""
             INSERT INTO "Displays" ("displayId", "parentId", "parentType", "type")
-            VALUES (%s, %s, 'Track', %s)
+            VALUES (%s, %s, %s, %s)
             RETURNING "Id"
         """, (
             display['displayId'],
-            track_id,
+            parent_id,
+            parent_type,
             display['type']
         ))
         display_id = cursor.fetchone()[0]
@@ -179,7 +180,8 @@ def insert_assemblies(data, cursor):
             print(f"Unsupported adapter type: {assembly['sequence']['adapter']['type']}")
 
         # Insert displays
-        insert_displays(assembly['sequence']['displays'], assembly_id, cursor)
+        insert_displays(assembly['sequence']['displays'], assembly_id, cursor, parent_type='Assembly')
+
 
         # Check for and insert refNameAliases if present
         ref_name_aliases = assembly.get('refNameAliases')

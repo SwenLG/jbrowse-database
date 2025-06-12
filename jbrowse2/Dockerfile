@@ -1,20 +1,22 @@
-# Use an official lightweight web server
 FROM nginx:latest
 
-# Set working directory
-WORKDIR /usr/share/nginx/html
+WORKDIR /tmp/jbrowse
 
-# Install dependencies, download JBrowse, extract, and clean up in one step
+# Install curl & unzip, download JBrowse, and extract to /tmp/jbrowse
 RUN apt-get update && apt-get install -y curl unzip && \
     curl -fsSL https://github.com/GMOD/jbrowse-components/releases/download/v3.0.5/jbrowse-web-v3.0.5.zip -o jbrowse-web.zip && \
-    ls -lh && df -h && \
-    unzip -o jbrowse-web.zip && \
-    ls -lh && \
-    rm jbrowse-web.zip
+    unzip -o jbrowse-web.zip && rm jbrowse-web.zip
+
+# Copy a custom startup script into the container
+COPY docker-entrypoint.sh /entrypoint.sh
+RUN chmod +x /entrypoint.sh
 
 COPY nginx.conf /etc/nginx/conf.d/default.conf
 
-# Expose the default web port
+# Use our script as the entrypoint
+ENTRYPOINT ["/entrypoint.sh"]
+
 EXPOSE 80
+
 
 

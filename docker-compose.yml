@@ -29,10 +29,10 @@ services:
     ports:
       - "8080:80"
     volumes:
-      - ./jbrowse2_data:/usr/share/nginx/html  # Mount the JBrowse data
+      - jbrowse2_data:/usr/share/nginx/html  # Mount the JBrowse data
       - ./config/config.json:/usr/share/nginx/html/config.json  # Mount your config.json inside the container
-      - /mnt/data:/usr/share/nginx/html/data:ro  # ✅ Mount all genomic data
-      - /var/www/html/jbrowse/data:/usr/share/nginx/html/jbrowse/data:ro  # ✅ Mount JBrowse data
+      - /mnt/data:/usr/share/nginx/html/data:ro  #  Mount all genomic data
+      - /var/www/html/jbrowse/data:/usr/share/nginx/html/jbrowse/data:ro  #  Mount JBrowse data
     restart: unless-stopped  # Ensure it restarts if it crashes
 
   flask_webform:
@@ -42,18 +42,21 @@ services:
       - "5000:5000"
     volumes:
       - ./flask_webform:/app
+      - /mnt/data:/mnt/data
+      - ./scripts:/scripts
+      - ./config:/config 
     restart: unless-stopped
 
   script_runner:
-    build: ./scripts  # ✅ Create a Dockerfile inside the "scripts" folder
+    build: ./scripts  #  Create a Dockerfile inside the "scripts" folder
     container_name: script_runner
     volumes:
-      - ./scripts:/scripts  # ✅ Mount the scripts folder
-      - ./config:/config  # ✅ Mount the config folder so the script can access config.json
+      - ./scripts:/scripts  #  Mount the scripts folder
+      - ./config:/config  #  Mount the config folder so the script can access config.json
     depends_on:
-      - postgres  # ✅ Ensure PostgreSQL is running before running scripts
-    working_dir: /scripts  # ✅ Set working directory
-    entrypoint: ["tail", "-f", "/dev/null"]  # ✅ Keeps the container running so you can exec into it
+      - postgres  #  Ensure PostgreSQL is running before running scripts
+    working_dir: /scripts  #  Set working directory
+    entrypoint: ["tail", "-f", "/dev/null"]  #  Keeps the container running so you can exec into it
 
 
 volumes:

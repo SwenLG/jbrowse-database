@@ -1,0 +1,17 @@
+{
+  "configuration": {
+    "rpc": {
+      "defaultDriver": "WebWorkerRpcDriver",
+      "drivers": {
+        "MainThreadRpcDriver": {},
+        "WebWorkerRpcDriver": {}
+      }
+    },
+    "disableAnalytics": true
+  },
+  "assemblies": [],
+  "tracks": [],
+  "internetAccounts": [],
+  "aggregateTextSearchAdapters": [],
+  "connections": []
+}

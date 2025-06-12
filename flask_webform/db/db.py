@@ -1,6 +1,6 @@
 import psycopg2
 
-# ✅ Centralized database connection
+# Centralized database connection
 DB_CONFIG = {
     "dbname": "jbrowse_config",
     "user": "swen",

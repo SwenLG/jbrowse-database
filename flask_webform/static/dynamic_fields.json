@@ -35,7 +35,21 @@
             { "label": "Category", "id": "category" },
             { "label": "Adapter Type", "id": "adapterType", "value": "VcfTabixAdapter" },
             { "label": "VCF Location", "id": "vcfGzLocation", "useFilePath": true },
-            { "label": "Index Location", "id": "indexLocation", "useFilePath": true, "suffix": ".tbi" }
+            { "label": "Index Location", "id": "indexLocation", "useFilePath": true, "suffix": ".tbi" },
+            { "label": "Displays", "id": "displays", "type": "multi-select", "options": ["LinearPairedArcDisplay", "LinearVariantDisplay", "ChordVariantDisplay", "LinearReferenceSequenceDisplay", "LinearGCContentDisplay"], "default": "LinearVariantDisplay" }
+        ]
+    },
+    "GFF": {
+        "fields": [
+            { "label": "Track ID", "id": "trackId", "generate": true },
+            { "label": "Type", "id": "type", "value": "FeatureTrack" },
+            { "label": "Name", "id": "name", "useFileName": true },
+            { "label": "Assembly Names", "id": "assemblyNames" },
+            { "label": "Category", "id": "category" },
+            { "label": "Adapter Type", "id": "adapterType", "value": "Gff3TabixAdapter" },
+            { "label": "GFF Location", "id": "gffGzLocation", "useFilePath": true },
+            { "label": "Index Location", "id": "indexLocation", "useFilePath": true, "suffix": ".tbi" },
+            { "label": "Displays", "id": "displays", "type": "multi-select", "options": ["LinearArcDisplay", "LinearManhattanDisplay", "LinearBasicDisplay", "LinearGCContentDisplay", "LinearReferenceSequenceDisplay"], "default": "LinearBasicDisplay" }
         ]
     },
     "BAM": {
@@ -48,8 +62,7 @@
             { "label": "Adapter Type", "id": "adapterType", "value": "BamAdapter" },
             { "label": "BAM Location", "id": "bamLocation", "useFilePath": true },
             { "label": "Index Location", "id": "indexLocation", "useFilePath": true, "suffix": ".bai" },
-            { "label": "sequence Adapter ID", "id": "sequenceAdapterId" },
-            { "label": "sequence Adapter Type", "id": "sequenceAdapterType" }
+            { "label": "Displays", "id": "displays", "type": "multi-select", "options": ["LinearSNPCoverageDisplay", "LinearPileupDisplay", "LinearGCContentDisplay", "LinearReferenceSequenceDisplay", "LinearAlignmentsDisplay", "LinearReadCloudDisplay", "LinearReadArcsDisplay"], "default": "LinearAlignmentsDisplay" }
         ]
     },
     "CRAM": {
@@ -62,8 +75,7 @@
             { "label": "Adapter Type", "id": "adapterType", "value": "CramAdapter" },
             { "label": "CRAM Location", "id": "cramLocation", "useFilePath": true },
             { "label": "Crai Location", "id": "craiLocation", "useFilePath": true, "suffix": ".crai" },
-            { "label": "sequence Adapter ID", "id": "sequenceAdapterId" },
-            { "label": "sequence Adapter Type", "id": "sequenceAdapterType" }
+            { "label": "Displays", "id": "displays", "type": "multi-select", "options": ["LinearSNPCoverageDisplay", "LinearPileupDisplay", "LinearAlignmentsDisplay", "LinearReadCloudDisplay", "LinearReadArcsDisplay"], "default": "LinearAlignmentsDisplay" }
         ]
     },
     "BED": {
@@ -75,7 +87,8 @@
             { "label": "Category", "id": "category" },
             { "label": "Adapter Type", "id": "adapterType", "value": "BedTabixAdapter" },
             { "label": "BED Location", "id": "bedGzLocation", "useFilePath": true },
-            { "label": "Index Location", "id": "indexLocation", "useFilePath": true, "suffix": ".tbi" }
+            { "label": "Index Location", "id": "indexLocation", "useFilePath": true, "suffix": ".tbi" },
+            { "label": "Displays", "id": "displays", "type": "multi-select", "options": ["LinearGCContentDisplay", "LinearReferenceSequenceDisplay", "LinearArcDisplay", "LinearManhattanDisplay", "LinearBasicDisplay"], "default": "LinearBasicDisplay" }
         ]
     },
     "PAF": {
@@ -83,10 +96,11 @@
             { "label": "Track ID", "id": "trackId", "generate": true },
             { "label": "Type", "id": "type", "value": "SyntenyTrack" },
             { "label": "Name", "id": "name", "useFileName": true },
-            { "label": "Assembly Names", "id": "assemblyNames" },
+            { "label": "Assembly Names", "id": "assemblyNames", "type": "multi-select", "minSelections": 2 },
             { "label": "Category", "id": "category" },
             { "label": "Adapter Type", "id": "adapterType", "value": "PAFAdapter" },
-            { "label": "PAF Location", "id": "pafLocation", "useFilePath": true }
+            { "label": "PAF Location", "id": "pafLocation", "useFilePath": true },
+            { "label": "Displays", "id": "displays", "type": "multi-select", "options": ["DotplotDisplay", "LGVSyntenyDisplay", "LinearComparativeDisplay", "LinearSyntenyDisplay"], "default": "DotPlotDisplay" }
         ]
     },
     "DELTA": {
@@ -96,8 +110,9 @@
             { "label": "Name", "id": "name", "useFileName": true },
             { "label": "Assembly Names", "id": "assemblyNames" },
             { "label": "Category", "id": "category" },
-            { "label": "Adapter Type", "value": "DeltaAdapter" },
-            { "label": "DELTA Location", "id": "deltaLocation", "useFilePath": true }
+            { "label": "Adapter Type", "id": "adapterType", "value": "DeltaAdapter" },
+            { "label": "DELTA Location", "id": "deltaLocation", "useFilePath": true },
+            { "label": "Displays", "id": "displays", "type": "multi-select", "options": ["DotplotDisplay", "LinearComparativeDisplay" , "LinearSyntenyDisplay", "LGVSyntenyDisplay"], "default": "DotplotDisplay" }
         ]
     }
 }
